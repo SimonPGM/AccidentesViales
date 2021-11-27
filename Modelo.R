@@ -2,8 +2,16 @@ library(tidyverse)
 library(magrittr)
 library(lubridate)
 library(forecast)
+library()
 ############Simon
 datos <- readRDS("datos_crudos.Rds") #LEYENDO RDS
+
+#Generando fechas 
+json <- fromJSON(file = "holidays.json")
+fechas <- c()
+for (i in 1:length(json$table)) {
+  fechas[i] <- as.Date(json$table[[i]]$celebrationDay)
+} 
 
 #Las fechas se formatean como Año-Mes-Dia
 datosts <- datos %>% #Contando accidentes por dia, formateando las fechas, asignando dia de la
@@ -13,10 +21,50 @@ datosts <- datos %>% #Contando accidentes por dia, formateando las fechas, asign
   summarise(ACCIDENTES_DIARIOS = n()) %>%
   ungroup() %>%
   mutate(FECHA_ACCIDENTE = as.Date(FECHA_ACCIDENTE, format = "%d/%m/%Y"),
-         DIA_ACCIDENTE = as.numeric(wday(FECHA_ACCIDENTE)),
+         DIA_ACCIDENTE = factor(wday(FECHA_ACCIDENTE, label = T)),
          ACCIDENTES_DIARIOS = ts(ACCIDENTES_DIARIOS, start = c(2014, 185), deltat = 1/365)) %>%
-  arrange(FECHA_ACCIDENTE)
+  arrange(FECHA_ACCIDENTE) %>%
+  mutate(PRECIP_MES = factor(if_else(month(FECHA_ACCIDENTE) %in% c(3:5, 9:11), 
+                              "Lluvioso", "Seco")),
+         FESTIVO = factor(if_else(FECHA_ACCIDENTE %in% fechas, "Si", "No")))
 
+rm(list = c("json", "fechas", "i"))
+
+#Generando quincenas
+datosts$QUINCENA <- "0"
+for (i in 1:nrow(datosts)) {
+  if (day(datosts$FECHA_ACCIDENTE[i]) %in% c(15, 30)) {
+    if (datosts$DIA_ACCIDENTE[i] != "dom" & datosts$FESTIVO[i] == "No") {
+      datosts[i, 6] <- "Si"
+    } else {
+      datosts[i, 6] <- "No"
+      if (datosts$FESTIVO[i] == "Si") {
+        j = 1
+        while(T) {
+          if(datosts$DIA_ACCIDENTE[i-j] != "dom") {
+            datosts[i-j, 6] <- "Si"
+            break
+          }
+          j <- j-1
+        } 
+      } else {
+        j = 1
+        while(T) {
+          if(datosts$DIA_ACCIDENTE[i-j] != "dom" & datosts$FESTIVO[i] == "No") {
+            datosts[i-j, 6] <- "Si"
+            break
+          }
+          j <- j-1
+        }
+      }
+    }
+  } else {
+    datosts[i, 6] <- "No"
+  }
+}
+
+datosts %<>%
+  mutate(QUINCENA = as.factor(QUINCENA))
 
 #Ploteando la serie completa
 ts.plot <- datosts %>%
@@ -31,12 +79,12 @@ plotly::ggplotly(ts.plot)
 ts.train <- datosts %>%
   mutate(Ano = year(FECHA_ACCIDENTE)) %>%
   filter(between(Ano, 2014, 2017)) %>%
-  select(-Ano)
+  select(-Ano, -FECHA_ACCIDENTE)
 
 ts.test <- datosts %>%
   mutate(Ano = year(FECHA_ACCIDENTE)) %>%
   filter(between(Ano, 2018, 2019)) %>%
-  select(-Ano)
+  select(-Ano, -FECHA_ACCIDENTE)
 
 model.train <- ts.train %$%
   auto.arima(ACCIDENTES_DIARIOS, xreg = DIA_ACCIDENTE, lambda = -1, D = 7)
