@@ -36,14 +36,14 @@ datosts$QUINCENA <- "0"
 for (i in 1:nrow(datosts)) {
   if (day(datosts$FECHA_ACCIDENTE[i]) %in% c(15, 30)) {
     if (datosts$DIA_ACCIDENTE[i] != "dom" & datosts$FESTIVO[i] == "No") {
-      datosts[i, 6] <- "Si"
+      datosts[i, 7] <- "Si"
     } else {
-      datosts[i, 6] <- "No"
+      datosts[i, 7] <- "No"
       if (datosts$FESTIVO[i] == "Si") {
         j = 1
         while(T) {
           if(datosts$DIA_ACCIDENTE[i-j] != "dom") {
-            datosts[i-j, 6] <- "Si"
+            datosts[i-j, 7] <- "Si"
             break
           }
           j <- j-1
@@ -52,7 +52,7 @@ for (i in 1:nrow(datosts)) {
         j = 1
         while(T) {
           if(datosts$DIA_ACCIDENTE[i-j] != "dom" & datosts$FESTIVO[i] == "No") {
-            datosts[i-j, 6] <- "Si"
+            datosts[i-j, 7] <- "Si"
             break
           }
           j <- j-1
@@ -60,12 +60,15 @@ for (i in 1:nrow(datosts)) {
       }
     }
   } else {
-    datosts[i, 6] <- "No"
+    datosts[i, 7] <- "No"
   }
 }
 
 datosts %<>%
   mutate(QUINCENA = as.factor(QUINCENA))
+
+#Guardando la base de datos
+#saveRDS(datosts, "basemodelo.Rds")
 
 #Ploteando la serie completa
 ts.plot <- datosts %>%
