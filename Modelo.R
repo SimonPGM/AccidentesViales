@@ -2,9 +2,9 @@ library(tidyverse)
 library(magrittr)
 library(lubridate)
 library(forecast)
-library()
+library(rjson)
 ############Simon
-datos <- readRDS("datos_crudos.Rds") #LEYENDO RDS
+datos <- readRDS("AccidentesMDE.Rds") #LEYENDO RDS
 
 #Generando fechas 
 json <- fromJSON(file = "holidays.json")
@@ -12,7 +12,7 @@ fechas <- c()
 for (i in 1:length(json$table)) {
   fechas[i] <- as.Date(json$table[[i]]$celebrationDay)
 } 
-
+detach("package:rjson", unload=TRUE)
 #Las fechas se formatean como Año-Mes-Dia
 datosts <- datos %>% #Contando accidentes por dia, formateando las fechas, asignando dia de la
   select(FECHA_ACCIDENTE) %>% #semana y ordenando por fecha
@@ -26,7 +26,8 @@ datosts <- datos %>% #Contando accidentes por dia, formateando las fechas, asign
   arrange(FECHA_ACCIDENTE) %>%
   mutate(PRECIP_MES = factor(if_else(month(FECHA_ACCIDENTE) %in% c(3:5, 9:11), 
                               "Lluvioso", "Seco")),
-         FESTIVO = factor(if_else(FECHA_ACCIDENTE %in% fechas, "Si", "No")))
+         FESTIVO = factor(if_else(FECHA_ACCIDENTE %in% fechas, "Si", "No")),
+         SEMANA = factor(week(FECHA_ACCIDENTE)))
 
 rm(list = c("json", "fechas", "i"))
 
