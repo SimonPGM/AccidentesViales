@@ -117,3 +117,83 @@ forc <- ts.test %$%
   forecast(model.train.nn, h = length(ts.test$ACCIDENTES_DIARIOS),
            xreg = DIA_ACCIDENTE)
 ###########Gaviria
+
+train <- basemodelo %>%
+  mutate(Ano = year(FECHA_ACCIDENTE)) %>%
+  filter(between(Ano, 2014, 2017)) %>%
+  select(-Ano, -FECHA_ACCIDENTE)
+
+test <- basemodelo %>%
+  mutate(Ano = year(FECHA_ACCIDENTE)) %>%
+  filter(between(Ano, 2018, 2019)) %>%
+  select(-Ano, -FECHA_ACCIDENTE)
+
+#------rlm---------------------------------
+
+mod1 <- lm(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+SEMANA, data = train)
+
+err <- function(mod, testset, trainset){
+  predtest <- predict(mod, testset)
+  predtrain <- predict(mod, trainset)
+  msetest <- mean((predtest-testset$ACCIDENTES_DIARIOS)^2)
+  msetrain <- mean((predtrain-trainset$ACCIDENTES_DIARIOS)^2)
+  return(data.frame(ERR = (msetest-msetrain)/msetest, RMSEtest = sqrt(msetest)))
+}
+
+err(mod1, test, train)
+
+#----xgboost-------------------------------
+
+trainxg <- data.frame(numacc = train$ACCIDENTES_DIARIOS,
+                      dia = as.numeric(train$DIA_ACCIDENTE),
+                      fest = as.numeric(train$FESTIVO))
+
+testxg <- data.frame(numacc = test$ACCIDENTES_DIARIOS,
+                     dia = as.numeric(test$DIA_ACCIDENTE),
+                     fest = as.numeric(test$FESTIVO))
+train_mat <- 
+  trainxg %>% 
+  select(-numacc) %>% 
+  as.matrix() %>% 
+  xgb.DMatrix(data = ., label = trainxg$numacc)
+
+test_mat <- 
+  testxg %>% 
+  select(-numacc) %>% 
+  as.matrix() %>% 
+  xgb.DMatrix(data = ., label = testxg$numacc)
+
+mod2 <- xgboost(data = train_mat, 
+                objective = "count:poisson",
+                nrounds = 2000, max.depth = 1000, eta = 0.5)
+
+predxg <- predict(mod2, train_mat)
+
+
+
+sqrt(mean((train$ACCIDENTES_DIARIOS-predxg)^2))
+
+#---------Random Forest-------------------------------
+
+mod3 <- randomForest(ACCIDENTES_DIARIOS~., data = train, ntree = 1000)
+
+err(mod3,test, train)
+
+
+#---------rls-----------------------------------------
+
+mod4 <- glm(ACCIDENTES_DIARIOS~., family = "gaussian", data = train)
+
+err(mod4, test, train)
+
+#------------knn------------ESTE-FUE---------------!!
+
+grid <- expand.grid(k = 6)
+
+mod5 <- caret::train(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+SEMANA,
+                     data = train, 
+                     method = "knn", 
+                     tuneGrid = grid)
+
+err(mod5, test, train)
+
