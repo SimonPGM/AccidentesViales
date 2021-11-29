@@ -1,6 +1,12 @@
+source("./Rendering/DbVIS.R")
 SERVER <- function(input, output) {
-  output$plotVis <- renderPlot({
-    plot(1:5, main = input$plottypeVis)
+  output$dataVis <- renderDataTable({
+    generate.db(input$dateinputstartVis, input$dateinputendVis,
+                input$acctypeVis, input$gravtypeVis)
+  }, options = list(pageLength = 10, lengthChange = F))
+  output$mapVis <- renderLeaflet({
+    generate.db.map(input$dateinputstartVis, input$dateinputendVis,
+                input$acctypeVis, input$gravtypeVis)
   })
   output$plotPO <- renderPlot({
     plot(1:5, main = input$acctypePO)

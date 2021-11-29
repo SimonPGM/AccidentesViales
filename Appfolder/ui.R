@@ -17,26 +17,38 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                                                "Seleccione la fecha de inicio para la visualización",
                                                value = "2014-07-04",
                                                min = "2014-07-04",
-                                               max = "2020-08-31",
+                                               max = "2020-09-01",
                                                format = "dd-mm-yyyy",
                                                language = "es"),
                                      dateInput("dateinputendVis",
                                                "Seleccione la fecha de fin para la visualización",
                                                value = "2020-08-31",
                                                min = "2014-07-04",
-                                               max = "2020-08-31",
+                                               max = "2020-09-01",
                                                format = "dd-mm-yyyy",
                                                language = "es"),
                                      selectInput("acctypeVis",
                                                  "Elija el tipo de accidente para filtrar",
-                                                 c("Sin filtro", "Atropello", "Caída de ocupante",
+                                                 c("Sin filtro", "Atropello", "Caída de Ocupante",
                                                    "Choque", "Volcamiento", "Incendio", "Otro"),
                                                  selected = "Sin filtro"
-                                     )
+                                     ),
+                                     selectInput("gravtypeVis",
+                                                 "Elija la gravedad del accidente para filtrar",
+                                                 c("Sin filtro", "Con heridos", "Solo daños",
+                                                   "Con muertos"),
+                                                 selected = "Sin filtro")
                                      ),
                               column(10,
-                                     plotOutput("plotVis")
+                                     conditionalPanel(
+                                       condition = "input.plottypeVis == 'Datos'",
+                                       dataTableOutput("dataVis")
+                                     ),
+                                     conditionalPanel(
+                                       condition = "input.plottypeVis == 'Mapa'",
+                                       leafletOutput("mapVis", width = "100%", height = 500)
                                      )
+                              )
                             )
                           )
                           ),
