@@ -7,3 +7,17 @@
     color: #555;
     background-color: #5698a6;
 }
+
+.row {
+    display: flex;
+  }
+  
+.column {
+    flex: 33.33%;
+    padding: 5px;
+    text-align: center;
+  }
+
+.gitphoto {
+    border-radius: 50%;
+}

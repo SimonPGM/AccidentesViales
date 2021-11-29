@@ -151,5 +151,6 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                                      )
                             ),
                  tabPanel("Clasificación de los barrios"),
-                 tabPanel("Información adicional")
+                 tabPanel("Información adicional",
+                          includeHTML("./www/Info.html"))
 )
