@@ -137,7 +137,7 @@ err <- function(mod, testset, trainset){
   predtrain <- predict(mod, trainset)
   msetest <- mean((predtest-testset$ACCIDENTES_DIARIOS)^2)
   msetrain <- mean((predtrain-trainset$ACCIDENTES_DIARIOS)^2)
-  return(data.frame(ERR = (msetest-msetrain)/msetest, RMSEtest = sqrt(msetest)))
+  return(data.frame(ERR = (msetest-msetrain)/msetest, RMSEtest = sqrt(msetest), RMSEtrain = sqrt(msetrain)))
 }
 
 #err(mod1, test, train)
@@ -195,7 +195,7 @@ modelo <- caret::train(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+SEMANA,
                      method = "knn", 
                      tuneGrid = grid)
 
-err(mod5, test, train)
+err(modelo, test, train)
 
 #--------MODELO-MULTICLASE----------------------------
 
@@ -242,8 +242,8 @@ predict.test  <- data.frame(FECHA = test$FECHA_ACCIDENTE,
                             OTRO = round(proporciones[5]*predict(modelo,test)),
                             VOLCAMIENTO = round(proporciones[6]*predict(modelo,test)))
 
-saveRDS(predict.train, "predict.train.Rds")
-saveRDS(predict.test, "predict.test.Rds")
+saveRDS(predict.train, "predict_train.Rds")
+saveRDS(predict.test, "predict_test.Rds")
 
 #------GENERANDO-DATASET-PARA-2020----------------------------------
 
@@ -260,3 +260,20 @@ base2020 <- AccidentesMDE %>%
   mutate(SEMANA = factor(week(FECHA_ACCIDENTE))) %>%
   filter(year(FECHA_ACCIDENTE) == 2020)
 saveRDS(base2020, "base2020.Rds") 
+
+#------------OBSERVANDO-EL-AJUSTE-PARA-ESTE-AÑO--------------------------
+
+plotfit2020 <- ggplotly(ggplot(base2020, aes(FECHA_ACCIDENTE, ACCIDENTES_DIARIOS)) + 
+               geom_point() +
+               geom_line() + 
+               geom_path(data = data.frame(FECHA_ACCIDENTE = base2020$FECHA_ACCIDENTE, 
+                                           ACCIDENTES_DIARIOS = predict(modelo, base2020[,-c(1,2)])), colour = "#03fcb1") +
+               geom_point(data = data.frame(FECHA_ACCIDENTE = base2020$FECHA_ACCIDENTE, 
+                                            ACCIDENTES_DIARIOS = predict(modelo, base2020[,-c(1,2)])), colour = "#03fcb1") +
+               labs(title = "Ajuste del modelo en el año 2020", 
+                    caption = "Knn con k = 6", x = "Fecha", y = "Número de accidentes") +
+               theme_minimal() + 
+               theme(plot.title = element_text(hjust = 0.5)))
+
+saveRDS(plotfit2020, "plotfit2020.Rds")
+       
