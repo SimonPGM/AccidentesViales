@@ -121,16 +121,16 @@ forc <- ts.test %$%
 train <- basemodelo %>%
   mutate(Ano = year(FECHA_ACCIDENTE)) %>%
   filter(between(Ano, 2014, 2017)) %>%
-  select(-Ano, -FECHA_ACCIDENTE)
+  select(-Ano)
 
 test <- basemodelo %>%
   mutate(Ano = year(FECHA_ACCIDENTE)) %>%
   filter(between(Ano, 2018, 2019)) %>%
-  select(-Ano, -FECHA_ACCIDENTE)
+  select(-Ano)
 
 #------rlm---------------------------------
 
-mod1 <- lm(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+SEMANA, data = train)
+#mod1 <- lm(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+SEMANA, data = train)
 
 err <- function(mod, testset, trainset){
   predtest <- predict(mod, testset)
@@ -140,60 +140,107 @@ err <- function(mod, testset, trainset){
   return(data.frame(ERR = (msetest-msetrain)/msetest, RMSEtest = sqrt(msetest)))
 }
 
-err(mod1, test, train)
+#err(mod1, test, train)
 
 #----xgboost-------------------------------
 
-trainxg <- data.frame(numacc = train$ACCIDENTES_DIARIOS,
-                      dia = as.numeric(train$DIA_ACCIDENTE),
-                      fest = as.numeric(train$FESTIVO))
-
-testxg <- data.frame(numacc = test$ACCIDENTES_DIARIOS,
-                     dia = as.numeric(test$DIA_ACCIDENTE),
-                     fest = as.numeric(test$FESTIVO))
-train_mat <- 
-  trainxg %>% 
-  select(-numacc) %>% 
-  as.matrix() %>% 
-  xgb.DMatrix(data = ., label = trainxg$numacc)
-
-test_mat <- 
-  testxg %>% 
-  select(-numacc) %>% 
-  as.matrix() %>% 
-  xgb.DMatrix(data = ., label = testxg$numacc)
-
-mod2 <- xgboost(data = train_mat, 
-                objective = "count:poisson",
-                nrounds = 2000, max.depth = 1000, eta = 0.5)
-
-predxg <- predict(mod2, train_mat)
-
-
-
-sqrt(mean((train$ACCIDENTES_DIARIOS-predxg)^2))
+#trainxg <- data.frame(numacc = train$ACCIDENTES_DIARIOS,
+#                      dia = as.numeric(train$DIA_ACCIDENTE),
+#                      fest = as.numeric(train$FESTIVO))
+#
+#testxg <- data.frame(numacc = test$ACCIDENTES_DIARIOS,
+#                     dia = as.numeric(test$DIA_ACCIDENTE),
+#                     fest = as.numeric(test$FESTIVO))
+#train_mat <- 
+#  trainxg %>% 
+#  select(-numacc) %>% 
+#  as.matrix() %>% 
+#  xgb.DMatrix(data = ., label = trainxg$numacc)
+#
+#test_mat <- 
+#  testxg %>% 
+#  select(-numacc) %>% 
+#  as.matrix() %>% 
+#  xgb.DMatrix(data = ., label = testxg$numacc)
+#
+#mod2 <- xgboost(data = train_mat, 
+#                objective = "count:poisson",
+#                nrounds = 2000, max.depth = 1000, eta = 0.5)
+#
+#predxg <- predict(mod2, train_mat)
+#
+#
+#
+#sqrt(mean((train$ACCIDENTES_DIARIOS-predxg)^2))
 
 #---------Random Forest-------------------------------
 
-mod3 <- randomForest(ACCIDENTES_DIARIOS~., data = train, ntree = 1000)
-
-err(mod3,test, train)
+#mod3 <- randomForest(ACCIDENTES_DIARIOS~., data = train, ntree = 1000)
+#
+#err(mod3,test, train)
 
 
 #---------rls-----------------------------------------
 
-mod4 <- glm(ACCIDENTES_DIARIOS~., family = "gaussian", data = train)
-
-err(mod4, test, train)
+#mod4 <- glm(ACCIDENTES_DIARIOS~., family = "gaussian", data = train)
+#
+#err(mod4, test, train)
 
 #------------knn------------ESTE-FUE---------------!!
 
 grid <- expand.grid(k = 6)
 
-mod5 <- caret::train(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+SEMANA,
+modelo <- caret::train(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+SEMANA,
                      data = train, 
                      method = "knn", 
                      tuneGrid = grid)
 
 err(mod5, test, train)
 
+#--------MODELO-MULTICLASE----------------------------
+
+FECHAS <- as.Date(substring(AccidentesMDE$FECHA_ACCIDENTE,1,10), format = "%d/%m/%Y")
+CLIMA <- as.factor(ifelse(month(FECHAS) %in% c(3:5, 9:11), "LLUVIOSO", "SECO"))
+basemodelo2 <- data.frame(CLASE = as.factor(AccidentesMDE$CLASE_ACCIDENTE),
+                          FECHA = FECHAS,
+                          CLIMA = CLIMA)
+
+proporciones <- colMeans(prop.table(table(basemodelo2$FECHA, basemodelo2$CLASE),1)) #This is the model modofoko
+
+#-----MERGING-MODELO-MULTICLASE-Y-MODELO-PREDICTIVO----
+
+prediccionfinal <- function(DIA_ACCIDENTE, SEMANA){ #Esto es un ejemplo
+  pred <- predict(modelo, data.frame(DIA_ACCIDENTE = DIA_ACCIDENTE, SEMANA = as.factor(SEMANA)))
+  return(pred*proporciones)
+}
+
+
+prediccionfinal("dom", 10) #Número de accidentes de cada clase un domingo de la semana 10 del año 
+
+
+#--------ESTRUCTURACION-DE-LAS-PREDICCIONES-----------
+
+predict.train <- data.frame(FECHA = train$FECHA_ACCIDENTE,
+                            SEMANA = paste(week(train$FECHA_ACCIDENTE),year(train$FECHA_ACCIDENTE), sep="-"),
+                            MES =  paste(month(train$FECHA_ACCIDENTE),year(train$FECHA_ACCIDENTE), sep="-"),
+                            ANIO = year(train$FECHA_ACCIDENTE),
+                            ATROPELLO = round(proporciones[1]*predict(modelo,train)),
+                            CAIDA.OCUPANTE = round(proporciones[2]*predict(modelo,train)),
+                            CHOQUE = round(proporciones[3]*predict(modelo,train)),
+                            INCENDIO = round(proporciones[4]*predict(modelo,train)),
+                            OTRO = round(proporciones[5]*predict(modelo,train)),
+                            VOLCAMIENTO = round(proporciones[6]*predict(modelo,train)))
+
+predict.test  <- data.frame(FECHA = test$FECHA_ACCIDENTE,
+                            SEMANA = paste(week(test$FECHA_ACCIDENTE),year(test$FECHA_ACCIDENTE), sep="-"),
+                            MES =  paste(month(test$FECHA_ACCIDENTE),year(test$FECHA_ACCIDENTE), sep="-"),
+                            ANIO = year(test$FECHA_ACCIDENTE),
+                            ATROPELLO = round(proporciones[1]*predict(modelo,test)),
+                            CAIDA.OCUPANTE = round(proporciones[2]*predict(modelo,test)),
+                            CHOQUE = round(proporciones[3]*predict(modelo,test)),
+                            INCENDIO = round(proporciones[4]*predict(modelo,test)),
+                            OTRO = round(proporciones[5]*predict(modelo,test)),
+                            VOLCAMIENTO = round(proporciones[6]*predict(modelo,test)))
+
+saveRDS(predict.train, "predict.train.Rds")
+saveRDS(predict.test, "predict.test.Rds")
