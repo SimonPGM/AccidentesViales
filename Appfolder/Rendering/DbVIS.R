@@ -34,6 +34,6 @@ generate.db.map <- function(date.lower, date.upper,
       mutate(lng = as.numeric(lng), lat = as.numeric(lat))
   m <- leaflet() %>%
         addTiles() %>%  # Add default OpenStreetMap map tiles
-        addMarkers(lng=temp$lng, lat=temp$lat)
+        addMarkers(lng=temp$lng, lat=temp$lat, clusterOptions = markerClusterOptions()) 
   return(m)
 }
