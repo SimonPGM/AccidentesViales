@@ -259,4 +259,4 @@ base2020 <- AccidentesMDE %>%
   arrange(FECHA_ACCIDENTE) %>%
   mutate(SEMANA = factor(week(FECHA_ACCIDENTE))) %>%
   filter(year(FECHA_ACCIDENTE) == 2020)
-  
+saveRDS(base2020, "base2020.Rds") 
