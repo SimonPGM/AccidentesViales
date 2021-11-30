@@ -244,3 +244,19 @@ predict.test  <- data.frame(FECHA = test$FECHA_ACCIDENTE,
 
 saveRDS(predict.train, "predict.train.Rds")
 saveRDS(predict.test, "predict.test.Rds")
+
+#------GENERANDO-DATASET-PARA-2020----------------------------------
+
+base2020 <- AccidentesMDE %>% 
+  select(FECHA_ACCIDENTE) %>% #semana y ordenando por fecha
+  mutate(FECHA_ACCIDENTE = substring(FECHA_ACCIDENTE, 1, 10)) %>%
+  group_by(FECHA_ACCIDENTE) %>%
+  summarise(ACCIDENTES_DIARIOS = n()) %>%
+  ungroup() %>%
+  mutate(FECHA_ACCIDENTE = as.Date(FECHA_ACCIDENTE, format = "%d/%m/%Y"),
+         DIA_ACCIDENTE = factor(wday(FECHA_ACCIDENTE, label = T)),
+         ACCIDENTES_DIARIOS = ACCIDENTES_DIARIOS) %>%
+  arrange(FECHA_ACCIDENTE) %>%
+  mutate(SEMANA = factor(week(FECHA_ACCIDENTE))) %>%
+  filter(year(FECHA_ACCIDENTE) == 2020)
+  
