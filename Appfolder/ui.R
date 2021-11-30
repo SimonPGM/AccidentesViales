@@ -4,8 +4,8 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                  tabPanel("Visualización de datos",
                           fluidPage(
                             fluidRow(
-                              column(10,
-                                     h4("Me la pelan putos"),
+                              column(12,
+                                     includeHTML("./www/header.html")
                                      )
                             ),
                             fluidRow(
@@ -56,8 +56,8 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                             tabPanel("Periodo 2014-2018",
                                      fluidPage(
                                        fluidRow(
-                                         column(10,
-                                                h4("Me la pelan putos"),
+                                         column(12,
+                                                includeHTML("./www/header.html")
                                          )
                                        ),
                                        fluidRow(
@@ -93,7 +93,7 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                                      fluidPage(
                                        fluidRow(
                                          column(10,
-                                                h4("Me la pelan putos"),
+                                                includeHTML("./www/header.html")
                                          )
                                        ),
                                        fluidRow(
@@ -129,7 +129,7 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                                      fluidPage(
                                        fluidRow(
                                          column(10,
-                                                h4("Me la pelan putos"),
+                                                includeHTML("./www/header.html")
                                          )
                                        ),
                                        fluidRow(
