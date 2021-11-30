@@ -5,6 +5,12 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = F, fig.align = T)
+library(knitr)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+library(forecast)
+library(rjson)
 ```
 
 En el presente informe se cuenta como se realizó el proceso de depuración de datos, 
@@ -64,3 +70,66 @@ y 19613 en Heliconia.
 Esta variable es el catastro y no fue tenida en cuenta pues se considera que 
 no aporta información importante para el proceso de modelación o creación de 
 nuevas variables.
+
+# Construcción de la base de datos para modelación
+
+Una vez limpiada la base de datos, se construye una nueva exclusivamente para 
+el proceso de modelación. Para la construcción de esta base de datos se parte 
+únicamente de la variable fecha de accidente y a partir de ella se van
+construyendo las demás. A continuación se presenta la estructura de la base de 
+datos resultante:
+
+```{r}
+basemodelo <- readRDS("basemodelo.Rds")
+kable(head(basemodelo), 
+             col.names = c("FECHA ACCIDENTE", "ACCIDENTES DIARIOS", "DIA ACCIDENTE",
+                           "PRECIP MES", "FESTIVO", "SEMANA", "QUINCENA"),
+             align = "c")
+```
+
+
+### Fecha accidente y accidentes diarios
+
+Se obtiene al considerar la subcadena con los 10 primeros caracteres de la 
+cadena inicial (la cual contenía la fecha y hora del accidente) y agrupando 
+las fechas por frecuencia de ocurrencia (conteo). Posteriormente las cadenas 
+de fechas son convertidas en objetos de la clase Date. Todo esto se hace 
+gracias a las funciones `select()`, `group_by()`, `mutate()`, `summarise()` y
+`n()` de la librería `dplyr` y la función `as.Date()` que viene en los paquetes
+básicos de R.
+
+### Día accidente
+
+El día del accidente es obtenido gracias a la función `wday()` de la librería 
+`lubridate` ingresándole un objeto de la clase Date, en este caso fecha de 
+accidente.
+
+### Precipitación del mes
+
+Se consultó en una fuente de internet cuales son los meses que se pueden 
+catalogar como lluviosos y secos en la ciudad de Medellín y se llegó que 
+los meses marzo, abril, mayo, septiembre, octubre, noviembre se consideran 
+como lluviosos y los demás como secos, luego se usó la función `month()` 
+de la librería `lubridate` y una instrucción condicional para determinar 
+los meses que se pueden etiquetar como lluviosos o secos.
+
+### Festivos y días especiales
+
+Se buscó la manera de llevar la información de días festivos a la base de datos.
+Gracias a un repositorio de GitHub de Nequi se encontró un modulo node.js el 
+cual a través de JavaScript se pudo exportar a un objeto JSON, luego se usó la
+función `fromJSON()` de la librería `rjson` para poder trabajar con JavaScript 
+Objects Notation (JSON) en R y así extraer los datos de los días festivos en 
+Colombia. 
+
+### Semana y Quincena
+
+La variable semana se obtuvo fácilmente gracias a la función `week()` de la 
+librería `lubridate`. La variable Quincena se obtuvo mediante un proceso 
+iterativo; los valores de esta variable cumplen las siguientes reglas:
+
+* Si el día de quincena resulta ser un domingo el pago se realiza el día viernes
+antes de la quincena
+* Si el día de quincena resulta ser un día festivo, el pago se realiza un día 
+antes siempre que este sea hábil de pago (por ejemplo si la quincena cae un 
+lunes festivo, el retiro está habilitado el día sábado).

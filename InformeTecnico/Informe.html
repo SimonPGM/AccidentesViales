@@ -194,6 +194,112 @@ pre code {
 <p>Esta variable es el catastro y no fue tenida en cuenta pues se considera que no aporta información importante para el proceso de modelación o creación de nuevas variables.</p>
 </div>
 </div>
+<div id="construcción-de-la-base-de-datos-para-modelación" class="section level1">
+<h1>Construcción de la base de datos para modelación</h1>
+<p>Una vez limpiada la base de datos, se construye una nueva exclusivamente para el proceso de modelación. Para la construcción de esta base de datos se parte únicamente de la variable fecha de accidente y a partir de ella se van construyendo las demás. A continuación se presenta la estructura de la base de datos resultante:</p>
+<table>
+<colgroup>
+<col width="18%" />
+<col width="21%" />
+<col width="16%" />
+<col width="13%" />
+<col width="9%" />
+<col width="8%" />
+<col width="10%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">FECHA ACCIDENTE</th>
+<th align="center">ACCIDENTES DIARIOS</th>
+<th align="center">DIA ACCIDENTE</th>
+<th align="center">PRECIP MES</th>
+<th align="center">FESTIVO</th>
+<th align="center">SEMANA</th>
+<th align="center">QUINCENA</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">2014-07-04</td>
+<td align="center">23</td>
+<td align="center">vie</td>
+<td align="center">Seco</td>
+<td align="center">No</td>
+<td align="center">27</td>
+<td align="center">No</td>
+</tr>
+<tr class="even">
+<td align="center">2014-07-05</td>
+<td align="center">117</td>
+<td align="center">sáb</td>
+<td align="center">Seco</td>
+<td align="center">No</td>
+<td align="center">27</td>
+<td align="center">No</td>
+</tr>
+<tr class="odd">
+<td align="center">2014-07-06</td>
+<td align="center">79</td>
+<td align="center">dom</td>
+<td align="center">Seco</td>
+<td align="center">No</td>
+<td align="center">27</td>
+<td align="center">No</td>
+</tr>
+<tr class="even">
+<td align="center">2014-07-07</td>
+<td align="center">164</td>
+<td align="center">lun</td>
+<td align="center">Seco</td>
+<td align="center">No</td>
+<td align="center">27</td>
+<td align="center">No</td>
+</tr>
+<tr class="odd">
+<td align="center">2014-07-08</td>
+<td align="center">119</td>
+<td align="center">mar</td>
+<td align="center">Seco</td>
+<td align="center">No</td>
+<td align="center">27</td>
+<td align="center">No</td>
+</tr>
+<tr class="even">
+<td align="center">2014-07-09</td>
+<td align="center">118</td>
+<td align="center">mié</td>
+<td align="center">Seco</td>
+<td align="center">No</td>
+<td align="center">28</td>
+<td align="center">No</td>
+</tr>
+</tbody>
+</table>
+<div id="fecha-accidente-y-accidentes-diarios" class="section level3">
+<h3>Fecha accidente y accidentes diarios</h3>
+<p>Se obtiene al considerar la subcadena con los 10 primeros caracteres de la cadena inicial (la cual contenía la fecha y hora del accidente) y agrupando las fechas por frecuencia de ocurrencia (conteo). Posteriormente las cadenas de fechas son convertidas en objetos de la clase Date. Todo esto se hace gracias a las funciones <code>select()</code>, <code>group_by()</code>, <code>mutate()</code>, <code>summarise()</code> y <code>n()</code> de la librería <code>dplyr</code> y la función <code>as.Date()</code> que viene en los paquetes básicos de R.</p>
+</div>
+<div id="día-accidente" class="section level3">
+<h3>Día accidente</h3>
+<p>El día del accidente es obtenido gracias a la función <code>wday()</code> de la librería <code>lubridate</code> ingresándole un objeto de la clase Date, en este caso fecha de accidente.</p>
+</div>
+<div id="precipitación-del-mes" class="section level3">
+<h3>Precipitación del mes</h3>
+<p>Se consultó en una fuente de internet cuales son los meses que se pueden catalogar como lluviosos y secos en la ciudad de Medellín y se llegó que los meses marzo, abril, mayo, septiembre, octubre, noviembre se consideran como lluviosos y los demás como secos, luego se usó la función <code>month()</code> de la librería <code>lubridate</code> y una instrucción condicional para determinar los meses que se pueden etiquetar como lluviosos o secos.</p>
+</div>
+<div id="festivos-y-días-especiales" class="section level3">
+<h3>Festivos y días especiales</h3>
+<p>Se buscó la manera de llevar la información de días festivos a la base de datos. Gracias a un repositorio de GitHub de Nequi se encontró un modulo node.js el cual a través de JavaScript se pudo exportar a un objeto JSON, luego se usó la función <code>fromJSON()</code> de la librería <code>rjson</code> para poder trabajar con JavaScript Objects Notation (JSON) en R y así extraer los datos de los días festivos en Colombia.</p>
+</div>
+<div id="semana-y-quincena" class="section level3">
+<h3>Semana y Quincena</h3>
+<p>La variable semana se obtuvo fácilmente gracias a la función <code>week()</code> de la librería <code>lubridate</code>. La variable Quincena se obtuvo mediante un proceso iterativo; los valores de esta variable cumplen las siguientes reglas:</p>
+<ul>
+<li>Si el día de quincena resulta ser un domingo el pago se realiza el día viernes antes de la quincena</li>
+<li>Si el día de quincena resulta ser un día festivo, el pago se realiza un día antes siempre que este sea hábil de pago (por ejemplo si la quincena cae un lunes festivo, el retiro está habilitado el día sábado).</li>
+</ul>
+</div>
+</div>
 
 
 
