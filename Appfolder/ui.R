@@ -88,7 +88,7 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                                                             selected = "Diario")
                                          ),
                                          column(10,
-                                                plotOutput("plotPO")
+                                                plotlyOutput("plotPO")
                                          )
                                        )
                                      )
@@ -128,7 +128,7 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                                                             selected = "Diario")
                                          ),
                                          column(10,
-                                                plotOutput("plotPT")
+                                                plotlyOutput("plotPT")
                                          )
                                        )
                                      )
