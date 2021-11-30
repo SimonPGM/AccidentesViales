@@ -1,0 +1,66 @@
+---
+title: "Informe técnico"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, fig.align = T)
+```
+
+En el presente informe se cuenta como se realizó el proceso de depuración de datos, 
+creación de nuevas variables, manejo de fechas, obtención de los días festivos, 
+agrupamiento de datos entre otros. También se realiza análisis descriptivo para obtener
+información que puede ser útil en el proceso de modelación.
+
+# Depuración de datos 
+
+El proceso de depuración es probablemente uno de los pasos más importantes cuando
+se quiere hacer análisis de datos pues un modelo es tan bueno como lo sea la 
+calidad de información que se tenga.
+
+### Falsos únicos
+
+Para comenzar, se resalta que todas las variables son categóricas y la mayoría 
+de tipo carácter, el problema radica en que una gran cantidad de observaciones 
+eran falsos únicos, por ejemplo, para la variable clase de accidente se tienen 
+7 posibles valores los cuales son: atropello, caida de ocupante, caída de 
+ocupante, choque,  incendio, volcamiento y otro; note que el valor caida de 
+ocupante y caída de ocupante realmente significan lo mismo, sin embargo si 
+son observados como cadena de caracteres son diferentes lo cual implica que 
+los lenguajes de programación los tomen como dos cosas diferentes. La solución 
+a este problema fue cambiar todas las cadenas de caracteres "caída de ocupante" 
+por "caida de ocupante" (se selecciona la cadena sin tilde para evitar posibles 
+problemas con la codificación), esto se traduce en que finalmente dicha variable
+tendrá posteriormente 6 valores únicos como debería de ser. 
+
+Este problema paso en varias variables de la base de datos y el proceso para 
+solucionar dicho inconveniente fue análogo al hecho con la variable clase de 
+accidente.
+
+### Variable Location
+
+Esta variable tuvo el problema de que las coordenadas de longitud y latitud 
+estaban invertidas. La solución fue simplemente invertir las entradas.
+
+### Valores faltantes en variables espaciales
+
+Los valores faltantes es un problema típico en la mayoría de las bases de datos.
+Para el caso particular de variables espaciales como barrio, comuna y número de
+comuna se utilizó la variable location después de ser arreglada (pues esta no 
+tuvo valores faltantes); con estas coordenadas se encontraron los valores que 
+deberían ir en los valores faltantes.
+
+### Ubicaciones fuera de Medellín
+
+Teniendo en cuenta que el interés del estudio de la accidentalidad es en la 
+ciudad de Medellín, las observaciones que estén ubicadas fuera de la ciudad son
+eliminadas de la base de datos. Gracias a la variable location se encontraron 
+observaciones que no se encontraban en Medellín; en total se eliminaron 19733 
+observaciones de las cuales 19 estaban ubicadas en La estrella, 101 en Envigado 
+y 19613 en Heliconia.
+
+### Variable CBML
+
+Esta variable es el catastro y no fue tenida en cuenta pues se considera que 
+no aporta información importante para el proceso de modelación o creación de 
+nuevas variables.
