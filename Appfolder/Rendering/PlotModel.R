@@ -1,5 +1,5 @@
 generate.vis <- function(db, date.lower, date.upper,
-                         keyword = "Sin filtro") {
+                         keyword = "Sin filtro", kind = "Dia") {
   dates <- sort(c(as.Date(date.lower), as.Date(date.upper)))
   if (keyword == "Sin filtro") {
     temp <- db %>%
