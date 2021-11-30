@@ -14,7 +14,8 @@ SERVER <- function(input, output) {
   output$plotPT <- renderPlot({
     plot(1:5, main = input$acctypePT)
   })
-  output$plotPTh <- renderPlot({
-    plot(1:5, main = input$acctypePTh)
+  output$plotPTh <- renderPlotly({
+    graph <- readRDS("plotfit2020.Rds")
+    graph
   })
 }

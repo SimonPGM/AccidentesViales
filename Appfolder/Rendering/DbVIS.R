@@ -1,11 +1,11 @@
 datos <- readRDS("DBtoshow.Rds")
 datos.mapa <- readRDS("Maptoshow.Rds")
-lista.iconos <- iconList("Con muertos" = makeIcon(iconUrl = "https://i.imgur.com/kiydjCM.png",
-                                                  iconWidth = 16, iconHeight = 16),
-                         "Con heridos" = makeIcon(iconUrl = "https://i.imgur.com/kiydjCM.png",
-                                                  iconWidth = 16, iconHeight = 16),
-                         "Solo danos" = makeIcon(iconUrl = "https://i.imgur.com/kiydjCM.png",
-                                                 iconWidth = 16, iconHeight = 16))
+lista.iconos <- iconList("Con muertos" = makeIcon(iconUrl = "./www/risk-skull.png",
+                                                  iconWidth = 24, iconHeight = 24),
+                         "Con heridos" = makeIcon(iconUrl = "./www/bandage.png",
+                                                  iconWidth = 24, iconHeight = 24),
+                         "Solo danos" = makeIcon(iconUrl = "./www/car-crash.png",
+                                                 iconWidth = 48, iconHeight = 48))
 
 
 generate.db <- function(date.lower, date.upper,
@@ -39,10 +39,9 @@ generate.db.map <- function(date.lower, date.upper,
   temp <- generate.db(date.lower, date.upper, acctype, accgrav, db) %>%
     select(lng, lat, GRAVEDAD_ACCIDENTE) %>%
       mutate(lng = as.numeric(lng), lat = as.numeric(lat))
-  print(colnames(temp))
-  m <- leaflet(temp) %>%
+  m <- leaflet() %>%
         addTiles() %>%  # Add default OpenStreetMap map tiles
-        addMarkers(lng=lng, lat=lat, clusterOptions = markerClusterOptions(),
-                   icon = lista.iconos[GRAVEDAD_ACCIDENTE]) 
+        addMarkers(lng=temp$lng, lat=temp$lat, clusterOptions = markerClusterOptions(),
+                   icon = lista.iconos[temp$GRAVEDAD_ACCIDENTE]) 
   return(m)
 }

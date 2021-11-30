@@ -78,10 +78,14 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                                                           language = "es"),
                                                 selectInput("acctypePO",
                                                             "Elija el tipo de accidente para filtrar",
-                                                            c("Sin filtro", "Atropello", "Caída de ocupante",
+                                                            c("Atropello", "Caída de ocupante",
                                                               "Choque", "Volcamiento", "Incendio", "Otro"),
-                                                            selected = "Sin filtro"
-                                                )
+                                                            selected = "Atropello"
+                                                ),
+                                                selectInput("freqPO",
+                                                            "Elija la unidad de tiempo para la visualización",
+                                                            c("Diario", "Semanal", "Mensual"),
+                                                            selected = "Diario")
                                          ),
                                          column(10,
                                                 plotOutput("plotPO")
@@ -92,7 +96,7 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                             tabPanel("Periodo 2018-2019",
                                      fluidPage(
                                        fluidRow(
-                                         column(10,
+                                         column(12,
                                                 includeHTML("./www/header.html")
                                          )
                                        ),
@@ -114,10 +118,14 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                                                           language = "es"),
                                                 selectInput("acctypePT",
                                                             "Elija el tipo de accidente para filtrar",
-                                                            c("Sin filtro", "Atropello", "Caída de ocupante",
+                                                            c("Atropello", "Caída de ocupante",
                                                               "Choque", "Volcamiento", "Incendio", "Otro"),
-                                                            selected = "Sin filtro"
-                                                )
+                                                            selected = "Atropello"
+                                                ),
+                                                selectInput("freqPT",
+                                                            "Elija la unidad de tiempo para la visualización",
+                                                            c("Diario", "Semanal", "Mensual"),
+                                                            selected = "Diario")
                                          ),
                                          column(10,
                                                 plotOutput("plotPT")
@@ -128,7 +136,7 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                             tabPanel("Periodo 2020-2021",
                                      fluidPage(
                                        fluidRow(
-                                         column(10,
+                                         column(12,
                                                 includeHTML("./www/header.html")
                                          )
                                        ),
@@ -156,7 +164,7 @@ Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                                                 )
                                          ),
                                          column(10,
-                                                plotOutput("plotPTh")
+                                                plotlyOutput('plotPTh')
                                          )
                                        )
                                      )
