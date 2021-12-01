@@ -209,13 +209,13 @@ proporciones <- colMeans(prop.table(table(basemodelo2$FECHA, basemodelo2$CLASE),
 
 #-----MERGING-MODELO-MULTICLASE-Y-MODELO-PREDICTIVO----
 
-prediccionfinal <- function(DIA_ACCIDENTE, SEMANA){ #Esto es un ejemplo
-  pred <- predict(modelo, data.frame(DIA_ACCIDENTE = DIA_ACCIDENTE, SEMANA = as.factor(SEMANA)))
-  return(pred*proporciones)
-}
-
-
-prediccionfinal("dom", 10) #Número de accidentes de cada clase un domingo de la semana 10 del año 
+#prediccionfinal <- function(DIA_ACCIDENTE, SEMANA){ #Esto es un ejemplo
+#  pred <- predict(modelo, data.frame(DIA_ACCIDENTE = DIA_ACCIDENTE, SEMANA = as.factor(SEMANA)))
+#  return(pred*proporciones)
+#}
+#
+#
+#prediccionfinal("dom", 10) #Número de accidentes de cada clase un domingo de la semana 10 del año 
 
 
 #--------ESTRUCTURACION-DE-LAS-PREDICCIONES-----------
@@ -229,7 +229,9 @@ predict.train <- data.frame(FECHA = train$FECHA_ACCIDENTE,
                             CHOQUE = round(proporciones[3]*predict(modelo,train)),
                             INCENDIO = round(proporciones[4]*predict(modelo,train)),
                             OTRO = round(proporciones[5]*predict(modelo,train)),
-                            VOLCAMIENTO = round(proporciones[6]*predict(modelo,train)))
+                            VOLCAMIENTO = round(proporciones[6]*predict(modelo,train)),
+                            MES.D = month(train$FECHA_ACCIDENTE),
+                            SEMANA.D = week(train$FECHA_ACCIDENTE))
 
 predict.test  <- data.frame(FECHA = test$FECHA_ACCIDENTE,
                             SEMANA = paste(week(test$FECHA_ACCIDENTE),year(test$FECHA_ACCIDENTE), sep="-"),
@@ -240,29 +242,31 @@ predict.test  <- data.frame(FECHA = test$FECHA_ACCIDENTE,
                             CHOQUE = round(proporciones[3]*predict(modelo,test)),
                             INCENDIO = round(proporciones[4]*predict(modelo,test)),
                             OTRO = round(proporciones[5]*predict(modelo,test)),
-                            VOLCAMIENTO = round(proporciones[6]*predict(modelo,test)))
+                            VOLCAMIENTO = round(proporciones[6]*predict(modelo,test)),
+                            MES.D = month(test$FECHA_ACCIDENTE),
+                            SEMANA.D = week(test$FECHA_ACCIDENTE))
 
 saveRDS(predict.train, "predict_train.Rds")
 saveRDS(predict.test, "predict_test.Rds")
 
 #------GENERANDO-DATASET-PARA-2020----------------------------------
 
-base2020 <- AccidentesMDE %>% 
-  select(FECHA_ACCIDENTE) %>% #semana y ordenando por fecha
-  mutate(FECHA_ACCIDENTE = substring(FECHA_ACCIDENTE, 1, 10)) %>%
-  group_by(FECHA_ACCIDENTE) %>%
-  summarise(ACCIDENTES_DIARIOS = n()) %>%
-  ungroup() %>%
-  mutate(FECHA_ACCIDENTE = as.Date(FECHA_ACCIDENTE, format = "%d/%m/%Y"),
-         DIA_ACCIDENTE = factor(wday(FECHA_ACCIDENTE, label = T)),
-         ACCIDENTES_DIARIOS = ACCIDENTES_DIARIOS) %>%
-  arrange(FECHA_ACCIDENTE) %>%
-  mutate(SEMANA = factor(week(FECHA_ACCIDENTE))) %>%
-  filter(year(FECHA_ACCIDENTE) == 2020)
-saveRDS(base2020, "base2020.Rds") 
+#base2020 <- AccidentesMDE %>% 
+#  select(FECHA_ACCIDENTE) %>% #semana y ordenando por fecha
+#  mutate(FECHA_ACCIDENTE = substring(FECHA_ACCIDENTE, 1, 10)) %>%
+#  group_by(FECHA_ACCIDENTE) %>%
+#  summarise(ACCIDENTES_DIARIOS = n()) %>%
+#  ungroup() %>%
+#  mutate(FECHA_ACCIDENTE = as.Date(FECHA_ACCIDENTE, format = "%d/%m/%Y"),
+#         DIA_ACCIDENTE = factor(wday(FECHA_ACCIDENTE, label = T)),
+#         ACCIDENTES_DIARIOS = ACCIDENTES_DIARIOS) %>%
+#  arrange(FECHA_ACCIDENTE) %>%
+#  mutate(SEMANA = factor(week(FECHA_ACCIDENTE))) %>%
+#  filter(year(FECHA_ACCIDENTE) == 2020)
+
 
 #------------OBSERVANDO-EL-AJUSTE-PARA-ESTE-AÑO--------------------------
-
+base2020$FESTIVO <- basemodelo$FESTIVO[c(2010:2253)]
 plotfit2020 <- ggplotly(ggplot(base2020, aes(FECHA_ACCIDENTE, ACCIDENTES_DIARIOS)) + 
                geom_point() +
                geom_line() + 
@@ -271,9 +275,23 @@ plotfit2020 <- ggplotly(ggplot(base2020, aes(FECHA_ACCIDENTE, ACCIDENTES_DIARIOS
                geom_point(data = data.frame(FECHA_ACCIDENTE = base2020$FECHA_ACCIDENTE, 
                                             ACCIDENTES_DIARIOS = predict(modelo, base2020[,-c(1,2)])), colour = "#03fcb1") +
                labs(title = "Ajuste del modelo en el año 2020", 
-                    caption = "Knn con k = 6", x = "Fecha", y = "Número de accidentes") +
+                    caption = "Regresión Lineal", x = "Fecha", y = "Número de accidentes") +
                theme_minimal() + 
                theme(plot.title = element_text(hjust = 0.5)))
 
 saveRDS(plotfit2020, "plotfit2020.Rds")
+
+#Para el informe técnico
+ggplotly(ggplot(basemodelo, aes(FECHA_ACCIDENTE, ACCIDENTES_DIARIOS)) + 
+  geom_point() +
+  geom_line() + 
+  geom_path(data = data.frame(FECHA_ACCIDENTE = basemodelo$FECHA_ACCIDENTE, 
+                              ACCIDENTES_DIARIOS = predict(modelo, basemodelo)), colour = "#03fcb1") +
+  geom_point(data = data.frame(FECHA_ACCIDENTE = basemodelo$FECHA_ACCIDENTE, 
+                               ACCIDENTES_DIARIOS = predict(modelo, basemodelo)), colour = "#03fcb1") +
+  labs(title = "Ajuste del modelo", 
+       caption = "Regresion", x = "Fecha", y = "Número de accidentes") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5)))
+
        
