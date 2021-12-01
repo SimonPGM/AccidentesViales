@@ -57,7 +57,7 @@ generate.vis <-
         mutate(MES = factor(MES, levels = MES))
     } else {
       temp <- temp %>%
-        select(keywordtunit, keywordacc) %>%
+        select(all_of(keywordtunit), all_of(keywordacc)) %>%
         rename(ACCIDENTES = {
           {
             keywordacc
