@@ -130,17 +130,17 @@ test <- basemodelo %>%
 
 #------rlm---------------------------------
 
-#mod1 <- lm(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+SEMANA, data = train)
+modelo <- lm(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+FESTIVO, data = train)
 
 err <- function(mod, testset, trainset){
   predtest <- predict(mod, testset)
   predtrain <- predict(mod, trainset)
   msetest <- mean((predtest-testset$ACCIDENTES_DIARIOS)^2)
   msetrain <- mean((predtrain-trainset$ACCIDENTES_DIARIOS)^2)
-  return(data.frame(ERR = (msetest-msetrain)/msetest, RMSEtest = sqrt(msetest), RMSEtrain = sqrt(msetrain)))
+  return(data.frame(ERR = (msetest-msetrain)/msetrain, RMSEtest = sqrt(msetest), RMSEtrain = sqrt(msetrain)))
 }
 
-#err(mod1, test, train)
+err(modelo, test, train)
 
 #----xgboost-------------------------------
 
@@ -188,14 +188,14 @@ err <- function(mod, testset, trainset){
 
 #------------knn------------ESTE-FUE---------------!!
 
-grid <- expand.grid(k = 6)
-
-modelo <- caret::train(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+SEMANA,
-                     data = train, 
-                     method = "knn", 
-                     tuneGrid = grid)
-
-err(modelo, test, train)
+# grid <- expand.grid(k = 6)
+# 
+# modelo.knn <- caret::train(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+SEMANA,
+#                      data = train, 
+#                      method = "knn", 
+#                      tuneGrid = grid)
+# 
+# err(modelo.knn, test, train)
 
 #--------MODELO-MULTICLASE----------------------------
 
