@@ -294,4 +294,118 @@ ggplotly(ggplot(basemodelo, aes(FECHA_ACCIDENTE, ACCIDENTES_DIARIOS)) +
   theme_minimal() + 
   theme(plot.title = element_text(hjust = 0.5)))
 
-       
+#Algunas métricas particulares
+
+metrictimedata <- data.frame(fecha = test$FECHA_ACCIDENTE,
+                             semana = week(test$FECHA_ACCIDENTE),
+                             mes = month(test$FECHA_ACCIDENTE),
+                             anio = year(test$FECHA_ACCIDENTE),
+                             reales = test$ACCIDENTES_DIARIOS,                
+                             predichos = predict(modelo, test))
+
+#Para día
+
+sqrt(mean((metrictimedata$reales-metrictimedata$predichos)^2))
+
+#Para semana
+
+metricsemdata <- metrictimedata %>% 
+  group_by(semana) %>% 
+  summarise(reales = sum(reales), predichos = sum(predichos))
+  
+sqrt(mean((metricsemdata$reales-metricsemdata$predichos)^2))
+
+#Para mes
+
+metricmonthdata <- metrictimedata %>%
+  group_by(anio, mes) %>%
+  summarise(reales = sum(reales), predichos = sum(predichos))
+  
+sqrt(mean((metricmonthdata$reales-metricmonthdata$predichos)^2))
+
+#Exportando resultados temporales
+
+saveRDS(data.frame(Dia = sqrt(mean((metrictimedata$reales-metrictimedata$predichos)^2)),
+                   Semana = sqrt(mean((metricsemdata$reales-metricsemdata$predichos)^2)),
+                   Mes = sqrt(mean((metricmonthdata$reales-metricmonthdata$predichos)^2))),
+        "MetricasErrorTemporal.Rds")
+
+
+## Métricas anteriores sobre Train
+#
+#metrictimedata2 <- data.frame(fecha = train$FECHA_ACCIDENTE,
+#                             semana = week(train$FECHA_ACCIDENTE),
+#                             mes = month(train$FECHA_ACCIDENTE),
+#                             anio = year(train$FECHA_ACCIDENTE),
+#                             reales = train$ACCIDENTES_DIARIOS,                
+#                             predichos = predict(modelo, train))
+#
+##Para día
+#
+#sqrt(mean((metrictimedata2$reales-metrictimedata2$predichos)^2))
+#
+##Para semana
+#
+#metricsemdata2 <- metrictimedata2 %>% 
+#  group_by(semana) %>% 
+#  summarise(reales = sum(reales), predichos = sum(predichos))
+#
+#sqrt(mean((metricsemdata2$reales-metricsemdata2$predichos)^2))
+#
+##Para mes
+#
+#metricmonthdata2 <- metrictimedata2 %>%
+#  group_by(anio, mes) %>%
+#  summarise(reales = sum(reales), predichos = sum(predichos))
+#
+#sqrt(mean((metricmonthdata2$reales-metricmonthdata2$predichos)^2))
+
+#Diario por tipo de accidente
+
+TipoAccidente <- AccidentesMDE %>% #Contando accidentes por dia, formateando las fechas, asignando dia de la
+  select(FECHA_ACCIDENTE, CLASE_ACCIDENTE) %>% #semana y ordenando por fecha
+  mutate(FECHA_ACCIDENTE = substring(FECHA_ACCIDENTE, 1, 10)) %>%
+  group_by(FECHA_ACCIDENTE) %>%
+  mutate(FECHA_ACCIDENTE = as.Date(FECHA_ACCIDENTE, format = "%d/%m/%Y"),
+         CLASE_ACCIDENTE = factor(CLASE_ACCIDENTE),
+         ANIO = year(FECHA_ACCIDENTE)) %>%
+  arrange(FECHA_ACCIDENTE) %>%
+  filter(between(ANIO,2018,2019)) %>%
+  select(-ANIO)
+
+TipoAccidente <- table(TipoAccidente$FECHA_ACCIDENTE,TipoAccidente$CLASE_ACCIDENTE)
+TipoAccidente <- data.frame(FECHA = date(rownames(TipoAccidente)),
+                          ATROPELLO = TipoAccidente[,1],
+                          CHOQUE = TipoAccidente[,2], 
+                          CAIDA.OCUPANTE = TipoAccidente[,3],
+                          OTRO = TipoAccidente[,4],
+                          VOLCAMIENTO = TipoAccidente[,5], 
+                          INCENDIO = TipoAccidente[,6])
+row.names(TipoAccidente) <- NULL
+
+#Atropello
+sqrt(mean((TipoAccidente$ATROPELLO-predict_test$ATROPELLO)^2))
+
+#Choque
+sqrt(mean((TipoAccidente$CHOQUE-predict_test$CHOQUE)^2))
+
+#Caida ocupante
+sqrt(mean((TipoAccidente$CAIDA.OCUPANTE-predict_test$CAIDA.OCUPANTE)^2))
+
+#Otro
+sqrt(mean((TipoAccidente$OTRO-predict_test$OTRO)^2))
+
+#Volcamiento
+sqrt(mean((TipoAccidente$VOLCAMIENTO-predict_test$VOLCAMIENTO)^2))
+
+#Incendio
+sqrt(mean((TipoAccidente$INCENDIO-predict_test$INCENDIO)^2))
+
+#Exportando datos por tipo de accidente a nivel diario
+
+saveRDS(data.frame(Choque = sqrt(mean((TipoAccidente$CHOQUE-predict_test$CHOQUE)^2)),
+                   Caida.ocupante = sqrt(mean((TipoAccidente$CAIDA.OCUPANTE-predict_test$CAIDA.OCUPANTE)^2)),
+                   Otro = sqrt(mean((TipoAccidente$OTRO-predict_test$OTRO)^2)),
+                   Volcamiento = sqrt(mean((TipoAccidente$VOLCAMIENTO-predict_test$VOLCAMIENTO)^2)),
+                   Incendio = sqrt(mean((TipoAccidente$INCENDIO-predict_test$INCENDIO)^2))),
+        "MetricasErrorTipoAccidente.Rds")
