@@ -3,7 +3,7 @@ library(magrittr)
 library(lubridate)
 library(forecast)
 library(rjson)
-############Simon
+
 datos <- readRDS("AccidentesMDE.Rds") #LEYENDO RDS
 
 #Generando fechas 
@@ -94,9 +94,11 @@ model.train <- ts.train %$%
   auto.arima(ACCIDENTES_DIARIOS, xreg = DIA_ACCIDENTE, lambda = -1, D = 7)
 
 #mirando el RMSE en el train
+
 mean((ts.train$ACCIDENTES_DIARIOS - fitted(model.train))^2)
 
 #ploteando modelo original
+
 ts.plot(ts.train$ACCIDENTES_DIARIOS, round(fitted(model.train)),
         col = c("black", "red"))
 
@@ -116,7 +118,8 @@ model.train.nn <- ts.train %$%
 forc <- ts.test %$%
   forecast(model.train.nn, h = length(ts.test$ACCIDENTES_DIARIOS),
            xreg = DIA_ACCIDENTE)
-###########Gaviria
+
+#--------datasplit-------------------------
 
 train <- basemodelo %>%
   mutate(Ano = year(FECHA_ACCIDENTE)) %>%
@@ -144,58 +147,57 @@ err(modelo, test, train)
 
 #----xgboost-------------------------------
 
-#trainxg <- data.frame(numacc = train$ACCIDENTES_DIARIOS,
-#                      dia = as.numeric(train$DIA_ACCIDENTE),
-#                      fest = as.numeric(train$FESTIVO))
-#
-#testxg <- data.frame(numacc = test$ACCIDENTES_DIARIOS,
-#                     dia = as.numeric(test$DIA_ACCIDENTE),
-#                     fest = as.numeric(test$FESTIVO))
-#train_mat <- 
-#  trainxg %>% 
-#  select(-numacc) %>% 
-#  as.matrix() %>% 
-#  xgb.DMatrix(data = ., label = trainxg$numacc)
-#
-#test_mat <- 
-#  testxg %>% 
-#  select(-numacc) %>% 
-#  as.matrix() %>% 
-#  xgb.DMatrix(data = ., label = testxg$numacc)
-#
-#mod2 <- xgboost(data = train_mat, 
-#                objective = "count:poisson",
-#                nrounds = 2000, max.depth = 1000, eta = 0.5)
-#
-#predxg <- predict(mod2, train_mat)
-#
-#
-#
-#sqrt(mean((train$ACCIDENTES_DIARIOS-predxg)^2))
+trainxg <- data.frame(numacc = train$ACCIDENTES_DIARIOS,
+                      dia = as.numeric(train$DIA_ACCIDENTE),
+                      fest = as.numeric(train$FESTIVO))
 
+testxg <- data.frame(numacc = test$ACCIDENTES_DIARIOS,
+                     dia = as.numeric(test$DIA_ACCIDENTE),
+                     fest = as.numeric(test$FESTIVO))
+train_mat <- 
+  trainxg %>% 
+  select(-numacc) %>% 
+  as.matrix() %>% 
+  xgb.DMatrix(data = ., label = trainxg$numacc)
+
+test_mat <- 
+  testxg %>% 
+  select(-numacc) %>% 
+  as.matrix() %>% 
+  xgb.DMatrix(data = ., label = testxg$numacc)
+
+mod2 <- xgboost(data = train_mat, 
+                objective = "count:poisson",
+                nrounds = 2000, max.depth = 1000, eta = 0.5)
+
+predxg <- predict(mod2, train_mat)
+
+
+
+sqrt(mean((train$ACCIDENTES_DIARIOS-predxg)^2))
 #---------Random Forest-------------------------------
 
-#mod3 <- randomForest(ACCIDENTES_DIARIOS~., data = train, ntree = 1000)
-#
-#err(mod3,test, train)
+mod3 <- randomForest(ACCIDENTES_DIARIOS~., data = train, ntree = 1000)
+
+err(mod3,test, train)
 
 
 #---------rls-----------------------------------------
 
-#mod4 <- glm(ACCIDENTES_DIARIOS~., family = "gaussian", data = train)
-#
-#err(mod4, test, train)
+mod4 <- glm(ACCIDENTES_DIARIOS~., family = "gaussian", data = train)
 
-#------------knn------------ESTE-FUE---------------!!
+err(mod4, test, train)
 
-# grid <- expand.grid(k = 6)
-# 
-# modelo.knn <- caret::train(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+SEMANA,
-#                      data = train, 
-#                      method = "knn", 
-#                      tuneGrid = grid)
-# 
-# err(modelo.knn, test, train)
+#------------knn--------------------------------------
+
+grid <- expand.grid(k = 6)
+
+modelo.knn <- caret::train(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+SEMANA,
+                    data = train, 
+                    method = "knn", 
+                    tuneGrid = grid)
+
+err(modelo.knn, test, train)
 
 #--------MODELO-MULTICLASE----------------------------
 
@@ -205,7 +207,7 @@ basemodelo2 <- data.frame(CLASE = as.factor(AccidentesMDE$CLASE_ACCIDENTE),
                           FECHA = FECHAS,
                           CLIMA = CLIMA)
 
-proporciones <- colMeans(prop.table(table(basemodelo2$FECHA, basemodelo2$CLASE),1)) #This is the model modofoko
+proporciones <- colMeans(prop.table(table(basemodelo2$FECHA, basemodelo2$CLASE),1))
 
 #-----MERGING-MODELO-MULTICLASE-Y-MODELO-PREDICTIVO----
 
@@ -213,7 +215,7 @@ proporciones <- colMeans(prop.table(table(basemodelo2$FECHA, basemodelo2$CLASE),
 #  pred <- predict(modelo, data.frame(DIA_ACCIDENTE = DIA_ACCIDENTE, SEMANA = as.factor(SEMANA)))
 #  return(pred*proporciones)
 #}
-#
+#Esto es un ejemplo
 #
 #prediccionfinal("dom", 10) #Número de accidentes de cada clase un domingo de la semana 10 del año 
 
@@ -251,18 +253,18 @@ saveRDS(predict.test, "predict_test.Rds")
 
 #------GENERANDO-DATASET-PARA-2020----------------------------------
 
-#base2020 <- AccidentesMDE %>% 
-#  select(FECHA_ACCIDENTE) %>% #semana y ordenando por fecha
-#  mutate(FECHA_ACCIDENTE = substring(FECHA_ACCIDENTE, 1, 10)) %>%
-#  group_by(FECHA_ACCIDENTE) %>%
-#  summarise(ACCIDENTES_DIARIOS = n()) %>%
-#  ungroup() %>%
-#  mutate(FECHA_ACCIDENTE = as.Date(FECHA_ACCIDENTE, format = "%d/%m/%Y"),
-#         DIA_ACCIDENTE = factor(wday(FECHA_ACCIDENTE, label = T)),
-#         ACCIDENTES_DIARIOS = ACCIDENTES_DIARIOS) %>%
-#  arrange(FECHA_ACCIDENTE) %>%
-#  mutate(SEMANA = factor(week(FECHA_ACCIDENTE))) %>%
-#  filter(year(FECHA_ACCIDENTE) == 2020)
+base2020 <- AccidentesMDE %>% 
+  select(FECHA_ACCIDENTE) %>% #semana y ordenando por fecha
+  mutate(FECHA_ACCIDENTE = substring(FECHA_ACCIDENTE, 1, 10)) %>%
+  group_by(FECHA_ACCIDENTE) %>%
+  summarise(ACCIDENTES_DIARIOS = n()) %>%
+  ungroup() %>%
+  mutate(FECHA_ACCIDENTE = as.Date(FECHA_ACCIDENTE, format = "%d/%m/%Y"),
+         DIA_ACCIDENTE = factor(wday(FECHA_ACCIDENTE, label = T)),
+         ACCIDENTES_DIARIOS = ACCIDENTES_DIARIOS) %>%
+  arrange(FECHA_ACCIDENTE) %>%
+  mutate(SEMANA = factor(week(FECHA_ACCIDENTE))) %>%
+  filter(year(FECHA_ACCIDENTE) == 2020)
 
 
 #------------OBSERVANDO-EL-AJUSTE-PARA-ESTE-AÑO--------------------------
@@ -282,6 +284,7 @@ plotfit2020 <- ggplotly(ggplot(base2020, aes(FECHA_ACCIDENTE, ACCIDENTES_DIARIOS
 saveRDS(plotfit2020, "plotfit2020.Rds")
 
 #Para el informe técnico
+
 ggplotly(ggplot(basemodelo, aes(FECHA_ACCIDENTE, ACCIDENTES_DIARIOS)) + 
   geom_point() +
   geom_line() + 
@@ -332,38 +335,38 @@ saveRDS(data.frame(Dia = sqrt(mean((metrictimedata$reales-metrictimedata$predich
 
 
 ## Métricas anteriores sobre Train
-#
-#metrictimedata2 <- data.frame(fecha = train$FECHA_ACCIDENTE,
-#                             semana = week(train$FECHA_ACCIDENTE),
-#                             mes = month(train$FECHA_ACCIDENTE),
-#                             anio = year(train$FECHA_ACCIDENTE),
-#                             reales = train$ACCIDENTES_DIARIOS,                
-#                             predichos = predict(modelo, train))
-#
-##Para día
-#
-#sqrt(mean((metrictimedata2$reales-metrictimedata2$predichos)^2))
-#
-##Para semana
-#
-#metricsemdata2 <- metrictimedata2 %>% 
-#  group_by(semana) %>% 
-#  summarise(reales = sum(reales), predichos = sum(predichos))
-#
-#sqrt(mean((metricsemdata2$reales-metricsemdata2$predichos)^2))
-#
-##Para mes
-#
-#metricmonthdata2 <- metrictimedata2 %>%
-#  group_by(anio, mes) %>%
-#  summarise(reales = sum(reales), predichos = sum(predichos))
-#
-#sqrt(mean((metricmonthdata2$reales-metricmonthdata2$predichos)^2))
+
+metrictimedata2 <- data.frame(fecha = train$FECHA_ACCIDENTE,
+                             semana = week(train$FECHA_ACCIDENTE),
+                             mes = month(train$FECHA_ACCIDENTE),
+                             anio = year(train$FECHA_ACCIDENTE),
+                             reales = train$ACCIDENTES_DIARIOS,                
+                             predichos = predict(modelo, train))
+
+#Para día
+
+sqrt(mean((metrictimedata2$reales-metrictimedata2$predichos)^2))
+
+#Para semana
+
+metricsemdata2 <- metrictimedata2 %>% 
+  group_by(semana) %>% 
+  summarise(reales = sum(reales), predichos = sum(predichos))
+
+sqrt(mean((metricsemdata2$reales-metricsemdata2$predichos)^2))
+
+#Para mes
+
+metricmonthdata2 <- metrictimedata2 %>%
+  group_by(anio, mes) %>%
+  summarise(reales = sum(reales), predichos = sum(predichos))
+
+sqrt(mean((metricmonthdata2$reales-metricmonthdata2$predichos)^2))
 
 #Diario por tipo de accidente
 
-TipoAccidente <- AccidentesMDE %>% #Contando accidentes por dia, formateando las fechas, asignando dia de la
-  select(FECHA_ACCIDENTE, CLASE_ACCIDENTE) %>% #semana y ordenando por fecha
+TipoAccidente <- AccidentesMDE %>% 
+  select(FECHA_ACCIDENTE, CLASE_ACCIDENTE) %>% 
   mutate(FECHA_ACCIDENTE = substring(FECHA_ACCIDENTE, 1, 10)) %>%
   group_by(FECHA_ACCIDENTE) %>%
   mutate(FECHA_ACCIDENTE = as.Date(FECHA_ACCIDENTE, format = "%d/%m/%Y"),
