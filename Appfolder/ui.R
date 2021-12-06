@@ -1,3 +1,7 @@
+library(shiny)
+library(tidyverse)
+library(leaflet)
+library(plotly)
 Ui <- navbarPage("Análisis de accidentalidad en Medellín",
                  includeCSS("./www/styles.css"),
                  tabPanel("Introducción"),

@@ -1,5 +1,9 @@
 source("./Rendering/DbVIS.R")
 source("./Rendering/PlotModel.R")
+library(shiny)
+library(tidyverse)
+library(leaflet)
+library(plotly)
 SERVER <- function(input, output) {
   output$dataVis <- renderDataTable({
     generate.db(input$dateinputstartVis, input$dateinputendVis,
