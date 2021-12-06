@@ -18,7 +18,33 @@ zto <- function(x) {
 
 library(factoextra)
 
-datos[, 2] <- zto(datos[, 2])
+datos %<>%
+  mutate(choqueszto = zto(ACCIDENTES_DIARIOS))
+
+idx <- combn(3:5, 2)
+
+lista.clusters <- list()
+for (i in 1:ncol(idx)) {
+  lista.clusters[[i]] <- kmeans(datos[, idx[, i]], centers = 3, nstart = 25)
+}
+
+fviz_cluster(lista.clusters[[1]], data = datos[,idx[,1]])
+fviz_cluster(lista.clusters[[2]], data = datos[,idx[,2]])
+fviz_cluster(lista.clusters[[3]], data = datos[,idx[,3]])
+
+datos %<>%
+  mutate(clusterthree = lista.clusters[[3]]$cluster)
+datos %<>%
+  mutate(clusterone = lista.clusters[[1]]$cluster)
+datos %<>%
+  mutate(clustertwo = lista.clusters[[2]]$cluster)
+
+
+
+datos %>%
+  arrange(desc(ACCIDENTES_DIARIOS)) %>%
+  select(BARRIO, ACCIDENTES_DIARIOS, clustertwo) %>%
+  View()
 
 km1 <- kmeans(datos[,c(-1,-4)], centers = 4, nstart = 25)
 fviz_cluster(km1, data = datos[,c(-1,-4)])
@@ -40,3 +66,5 @@ datos %<>%
 
 datos %>%
   grou
+
+saveRDS(datos, "Datosclustersfinal.Rds")
