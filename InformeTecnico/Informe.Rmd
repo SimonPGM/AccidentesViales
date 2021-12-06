@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = F, fig.align = T)
+knitr::opts_chunk$set(echo = F, fig.align = "center")
 library(knitr)
 library(tidyverse)
 library(magrittr)
@@ -146,3 +146,100 @@ antes de la quincena
 * Si el día de quincena resulta ser un día festivo, el pago se realiza un día 
 antes siempre que este sea hábil de pago (por ejemplo si la quincena cae un 
 lunes festivo, el retiro está habilitado el día sábado).
+
+# Análisis descriptivo
+
+En esta sección se buscan hallazgos que permitan encontrar relaciones que puedan
+ser utiles en la construcción de modelos
+
+
+## Distribución del número de accidentes
+
+```{r}
+#Breaks con la regla de Sturges3
+MySturges <- function(x){
+  pretty(range(x),
+       n = nclass.Sturges(x), 
+       min.n = 1)
+}
+ggplot(basemodelo, aes(x = ACCIDENTES_DIARIOS)) +
+  geom_histogram(breaks = MySturges(basemodelo$ACCIDENTES_DIARIOS),
+                 col = "black", fill = "cyan") +
+  facet_wrap(~PRECIP_MES) +
+  labs(y = "Frecuecnia",  x = "Accidentes diarios") +
+  theme_bw()
+```
+
+
+
+
+
+# Modelación
+
+## Sobre Modelos
+
+Dada la naturaleza del problema en cuestión, se meditó inicialmente utilizar un
+modelo de regresión lineal que considera además un proceso SARIMA, es decir, un
+modelo de series de tiempo que comprende un periodo estacional. Este modelo fue
+considerado en principio dado que se pensó inicialmente en un periodo estacional
+semanal, y además de esto, considerar variables regresoras exógenas como las
+construidas anteriormente prometía una posibilidad de buen ajuste y medidas
+excepcionales de desempeño. Sin embargo, después de realizar diversos ajustes y
+probar distintas combinaciones de variables y parámetros del modelo, las métricas
+de desempeño obtenidas no fueron satisfactorias y finalmente se decidió por
+descartar esta opción.
+
+Posteriormente, en un breve intento se ajustó una red neuronal considerando la
+variable construida para el día del accidente, sin embargo, en este punto los
+resultados no mejoraron. 
+
+Llegado este momento, se optó por construir un modelo tradicional de regresión
+lineal usando múltiples subconjuntos de las variables anteriormente descritas y
+se llegó a un buen ajuste usando como variables el día del accidente y la
+variable indicadora para festivos. 
+
+Sin embargo, como es recomendado, se probaron algunas alternativas un poco más
+sofisticadas como el algoritmo xgboost usando respuesta poisson para conteos, o
+los bosques aleatorios buscando disminuir el error y lograr predicciones más
+precisas, sin embargo las métricas no lograron superar al modelo de regresión
+lineal y además, según el error relativo máximo permitido para esta causa, estos
+modelos se sobreajustaron considerablemente.
+
+Finalmente, se consideró un modelo KNN usando K = 6 entrenado con las variables
+definidas para el día del accidente y la semana del año (variable categórica que
+enumera de 1 a 54 las semanas del año), con el cual se logró un desempeño similar
+al del modelo de regresión, con un error relativo dentro de los parámetros
+permitidos.
+ 
+Así pues, entre ambos modelos (KNN y regresión lineal múltiple), se prefirió al
+modelo lineal gracias a su fácil interpretabilidad, información disponible acerca
+del método y familiaridad con el mismo, además de que se consideró como un modelo
+más parsimonioso y construido con covariables más adecuadas según el caso. El
+modelo final para este propósito es el siguiente:
+
+$$
+\hat{y} = \hat{\beta_0} + \hat{\beta_1} \text{(Día de accidente)} + \hat{\beta_2} \text{(Festivo)} 
+$$
+
+Con esto, se obtuvo un modelo con capacidad predictiva a nivel diario para el
+número de accidentes en la ciudad de Medellín. Para lograr predicciones a nivel
+semanal y mensual surgió la idea natural de sumar los días a nivel semanal y
+mensual, y después de evaluar métricas de desempeño en estas dimensiones, se
+concluyó que este procedimiento era adecuado y congruente con lo obtenido
+previamente y lo esperado según el error.
+
+Por último, para predecir por categoría de accidente se optó por estimar las
+proporciones globales para cada una de estas, y con este nuevo “vector de
+proporciones según categoría” hacer la predicción en conjunto con el modelo
+construido para el pronóstico a nivel temporal. 
+
+## Esto puede ser una conclusión
+
+Finalmente, en lo que respecta al proceso de modelación, se encontró que la clave
+para esta causa no residió en llegar a modelos muy sofisticados o algoritmos de
+alta complejidad. Lo fundamental en este caso fue construir y considerar las
+variables adecuadas que pudieran explicar desviaciones y patrones naturales en 
+el mecanismo que representa el número de accidentes en la ciudad de Medellín. 
+
+
+
