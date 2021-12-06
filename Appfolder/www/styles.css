@@ -55,7 +55,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#feffff', end
 div.caption {
   text-align: center;
   padding: 10px;
-  font-size: 30px;
+  font-size: 300%;
  }
  
 .container-fluid {
@@ -83,4 +83,13 @@ div.caption {
 
 .column:hover .oculto {
   visibility: visible;
+}
+
+.frow {
+  display: table;
+  width: 100%
+}
+
+.fcol {
+  display: table-cell;
 }
