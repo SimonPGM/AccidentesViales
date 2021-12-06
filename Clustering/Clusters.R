@@ -39,32 +39,18 @@ datos %<>%
 datos %<>%
   mutate(clustertwo = lista.clusters[[2]]$cluster)
 
+#Mirando los clusters
 
+datos <- readRDS("Datosclustersfinal.Rds")
 
 datos %>%
   arrange(desc(ACCIDENTES_DIARIOS)) %>%
   select(BARRIO, ACCIDENTES_DIARIOS, clustertwo) %>%
   View()
 
-km1 <- kmeans(datos[,c(-1,-4)], centers = 4, nstart = 25)
-fviz_cluster(km1, data = datos[,c(-1,-4)])
-
-km2 <- kmeans(datos[,c(-1,-3)], centers = 4, nstart = 25)
-fviz_cluster(km2, data = datos[,c(-1, -3)])
-
-km3 <- kmeans(datos[,c(-1,-4)], centers = 3, nstart = 25)
-fviz_cluster(km3, data = datos[,c(-1,-4)])
-
-km4 <- kmeans(datos[,c(-1,-3)], centers = 3, nstart = 25)
-fviz_cluster(km4, data = datos[,c(-1,-3)])
-
-#Se decide quedarse con km4, se usaron ACCIDENTES DIARIOS Y TASA GRAVES
-
-datos %<>%
-  mutate(Cluster = factor(km4$cluster)) %>%
-  arrange(desc(ACCIDENTES_DIARIOS))
-
+#Exportando los datos
 datos %>%
-  grou
-
-saveRDS(datos, "Datosclustersfinal.Rds")
+  mutate(Cluster = factor(if_else(clustertwo == 1, "Riesgo alto", if_else(clustertwo == 2, "Riesgo medio",
+                                                                   "Riesgo bajo")))) %>%
+  select(BARRIO, ACCIDENTES_DIARIOS, Cluster) %>%
+  saveRDS("BarrioCluster.Rds")
