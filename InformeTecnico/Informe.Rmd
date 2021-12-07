@@ -126,7 +126,7 @@ los meses que se pueden etiquetar como lluviosos o secos.
 
 ### Festivos y días especiales
 
-<!-- [3] Repo de github de Nequi -->
+<!-- [3]: https://github.com/nequibc/colombia-holidays -->
 
 Se buscó la manera de llevar la información de días festivos a la base de datos.
 Gracias a un repositorio de GitHub de Nequi se encontró un modulo node.js el 
@@ -153,7 +153,7 @@ En esta sección se buscan hallazgos que permitan encontrar relaciones que pueda
 ser utiles en la construcción de modelos
 
 
-## Distribución del número de accidentes
+## Distribución del número de accidentes diarios
 
 ```{r}
 #Breaks con la regla de Sturges3
@@ -166,13 +166,69 @@ ggplot(basemodelo, aes(x = ACCIDENTES_DIARIOS)) +
   geom_histogram(breaks = MySturges(basemodelo$ACCIDENTES_DIARIOS),
                  col = "black", fill = "cyan") +
   facet_wrap(~PRECIP_MES) +
-  labs(y = "Frecuecnia",  x = "Accidentes diarios") +
-  theme_bw()
+  labs(y = "Frecuencia",  x = "Accidentes diarios",
+       title = "Distribución del número de accidentes diarios por temporada climática") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
+Observe la gran similaridad entre la distribución del número de accidentes diarios en las temporadas secas y lluviosas lo cual sugiere que está variable no tiene efecto en el número de accidentes diarios.
 
+```{r}
+ggplot(basemodelo, aes(x = ACCIDENTES_DIARIOS)) +
+  geom_histogram(breaks = MySturges(basemodelo$ACCIDENTES_DIARIOS),
+                 col = "black", fill = "lightgreen") +
+  facet_wrap(~DIA_ACCIDENTE) +
+  labs(y = "Frecuencia",  x = "Accidentes diarios",
+       title = "Distribución de accidentes diarios por días de la semana") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
 
+Note que, en promedio, el número de accidentes diarios en los diferetes días de la semana es muy similar, sin embargo, existen ligeras diferencias en las distribuciones del número de accidentes.
 
+```{r}
+ggplot(basemodelo, aes(x = ACCIDENTES_DIARIOS)) +
+  geom_histogram(breaks = MySturges(basemodelo$ACCIDENTES_DIARIOS),
+                 col = "black", fill = "blue", 
+                 mapping = aes(y = ..density..)) +
+  facet_wrap(~FESTIVO) +
+  labs(y = "Frecuencia",  x = "Accidentes diarios",
+       title = "Distribución de accidentes diarios por días de la semana") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Se usa un histograma relativo debido a la gran diferencia en el número días festivos respecto a los no festivos, aquí se puede apreciar que la distribución del número de accidentes diarios difieren entre los días puesto que para los días no festivos existe asimetría negativa mientras que para los festivos tiene ligero sesgo a derecha, esto sugiere que la probabilidad de tener un mayor número de accidentes en un día cualesquiera es mayor los días festivos respecto a los días normales.
+
+```{r}
+raw_clean <- read.csv("../Limpieza_Datos/Limpia.csv", sep = ";")
+raw_clean %>% 
+  group_by(CLASE_ACCIDENTE) %>%
+  summarise(Accidentes = n()) %>%
+  ggplot(aes(x = CLASE_ACCIDENTE, y = Accidentes)) +
+  geom_col(col = "black", fill = "gold") +
+  labs(title = "Distribución de los accidentes por clase",
+       x = "Clase de accidente", y = "Cantidad de accidentes") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Se aprecia que el número de accidentes por clase de accidente es diferente por lo que no es descabellado repartir el número de accidentes de forma proporcional a la clase.
+
+```{r}
+ggplot(raw_clean, aes(x = CLASE_ACCIDENTE, fill = CLASE_ACCIDENTE)) +
+  geom_bar() +
+  facet_wrap(~ANO) +
+  theme_bw() +
+  labs(y = "Frecuencia", x = "Clase de accidente", fill = "Clase de accidente",
+       title = "Distribución de los accidentes por clase a lo largo de los años") +
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.text.x = element_blank())
+```
+
+A excepción de los años 2014 y 2020 (pues los datos no están completos para dicho años)
+la distribución del número de accidentes por clase de accidente se reparte igual en cada año lo cual refuerza la idea de distribuir la frecuencia de forma proporcional a la clase del accidente.
 
 # Modelación
 
