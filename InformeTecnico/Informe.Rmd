@@ -1,6 +1,9 @@
 ---
 title: "Informe técnico"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    theme: united
 ---
 
 ```{r setup, include=FALSE}
@@ -11,6 +14,7 @@ library(magrittr)
 library(lubridate)
 library(forecast)
 library(rjson)
+library(plotly)
 ```
 
 En el presente informe se cuenta como se realizó el proceso de depuración de
@@ -199,7 +203,7 @@ ggplot(basemodelo, aes(x = ACCIDENTES_DIARIOS)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-Se usa un histograma relativo debido a la gran diferencia en el número días festivos respecto a los no festivos, aquí se puede apreciar que la distribución del número de accidentes diarios difieren entre los días puesto que para los días no festivos existe asimetría negativa mientras que para los festivos tiene ligero sesgo a derecha, esto sugiere que la probabilidad de tener un mayor número de accidentes en un día cualesquiera es mayor los días festivos respecto a los días normales.
+Se usa un histograma relativo debido a la gran diferencia en el número días festivos respecto a los no festivos, aquí se puede apreciar que la distribución del número de accidentes diarios difieren entre los días puesto que para los días no festivos existe asimetría negativa mientras que para los festivos hay un ligero sesgo a derecha.
 
 ```{r}
 raw_clean <- read.csv("../Limpieza_Datos/Limpia.csv", sep = ";")
@@ -287,15 +291,106 @@ previamente y lo esperado según el error.
 Por último, para predecir por categoría de accidente se optó por estimar las
 proporciones globales para cada una de estas, y con este nuevo “vector de
 proporciones según categoría” hacer la predicción en conjunto con el modelo
-construido para el pronóstico a nivel temporal. 
+construido para el pronóstico a nivel temporal. Finalmente se presenta los valoes ajustados por el modelo vs los reales.
 
-## Esto puede ser una conclusión
+```{r}
+train <- basemodelo %>%
+  mutate(Ano = year(FECHA_ACCIDENTE)) %>%
+  filter(between(Ano, 2014, 2017)) %>%
+  select(-Ano)
 
-Finalmente, en lo que respecta al proceso de modelación, se encontró que la clave
+test <- basemodelo %>%
+  mutate(Ano = year(FECHA_ACCIDENTE)) %>%
+  filter(between(Ano, 2018, 2019)) %>%
+  select(-Ano)
+
+modelo <- lm(ACCIDENTES_DIARIOS~DIA_ACCIDENTE+FESTIVO, data = train)
+
+ggplotly(ggplot(basemodelo, aes(FECHA_ACCIDENTE, ACCIDENTES_DIARIOS)) + 
+  geom_point() +
+  geom_line() + 
+  geom_path(data = data.frame(FECHA_ACCIDENTE = basemodelo$FECHA_ACCIDENTE, 
+                              ACCIDENTES_DIARIOS = predict(modelo, basemodelo)),
+            colour = "#03fcb1") +
+  geom_point(data = data.frame(FECHA_ACCIDENTE = basemodelo$FECHA_ACCIDENTE, 
+                               ACCIDENTES_DIARIOS = predict(modelo, basemodelo)),
+             colour = "#03fcb1") +
+  labs(title = "Ajuste del modelo", 
+       caption = "Regresion", x = "Fecha", y = "Número de accidentes") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5)))
+```
+
+En el gráfico presentado, se logra apreciar que el modelo obtenido (líneas y puntos de color) logra capturar una parte importante de las desviaciones naturales del fenómeno estudiado, es decir, se comporta de forma congruente con la información muestral. En general se puede apreciar también que a lo largo de los años, el modelo ajustado se comporta uniformemente alrededor de una media tal y como lo describen los datos, sin embargo, no logra explicar la disminución drástica en el número de accidentes diarios que se presenta en el año 2020.
+
+# Clustering
+
+Para realizar el agrupamiento surgió la idea de manera natural de considerar tres
+grupos, los cuales representarían las zonas con menor riesgo, con riesgo medio y 
+con riesgo alto de accidentarse.
+
+Dicho esto, se contó la cantidad total de accidentes por barrio en el periodo de tiempo
+existente en los datos y con base en esto se crearon algunas métricas. La primera de
+ellas indica la proporción de accidentes graves, donde se consideró como de esta
+categoría aquellos choques en los cuales hubo defunciones. Asimismo, se construyó
+un indicador de la la probabilidad de ocurrencia de las clases de acciedentes más comunes,
+es decir, choque o atropello. Finalmente, se crea una última variable que consiste en
+la cantidad de accidentes llevados a una escala unitaria, ya que como los otros
+indicadores son proporciones, esto asegura que este también se encuentre en la misma 
+escala, pues esto es preferible al aplicar el algoritmo de k medias.
+
+Dicho esto, se consideraron, inicialmente, todas las combinaciones posibles de a dos,
+de las métricas mencionadas anteriormente, obteniendo que las variables tasa de graves
+y los choques en el intervalo unitario generan tres grupos que son razonables y 
+hacen sentido.
+
+```{r clustersone}
+readRDS("Cluster2.Rds")
+```
+
+Finalmente se presentan las distribuciones de la accidentalidad por cluster.
+
+```{r clusterstwo}
+datos <- readRDS("BarrioCluster.Rds")
+datos %>%
+  group_by(Cluster) %>%
+  summarise(media = mean(ACCIDENTES_DIARIOS), desvi = sd(ACCIDENTES_DIARIOS),
+            lower = quantile(ACCIDENTES_DIARIOS, c(0.025)),
+            upper = quantile(ACCIDENTES_DIARIOS, c(0.975)),
+            med = median(ACCIDENTES_DIARIOS)) %>%
+  select(-desvi) %>%
+  ggplot(aes(x = Cluster, y = media, ymin = upper, ymax = lower)) +
+  geom_errorbar() +
+  geom_point(col = "red")+
+  labs(x = "Riesgo de accidentalidad", y = "Número medio de accidentes por barrio",
+       title = "Comparación entre los diferentes grupos") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = .5))
+```
+
+Como se puede observar en el gráfico anterior, no hay traslapes entre las regiones de
+confianza definidas por grupo, lo cual es un indicio de que existen diferencias 
+significativas entre la cantidad de accidentes medios por grupo, mostrando así lo
+adecuados que resultó el agrupamiento.
+
+# Conclusiones
+
+* Finalmente, en lo que respecta al proceso de modelación, se encontró que la clave
 para esta causa no residió en llegar a modelos muy sofisticados o algoritmos de
 alta complejidad. Lo fundamental en este caso fue construir y considerar las
 variables adecuadas que pudieran explicar desviaciones y patrones naturales en 
 el mecanismo que representa el número de accidentes en la ciudad de Medellín. 
 
+* Respecto al clustering, se puede concluir que no fue necesario el uso de algoritmos
+sofisticados como DBSCAN o Gaussian Mixture Models, puesto que la intuición, un buen
+análisis de datos previo al agrupamiento y la creación de variables que sean 
+dicientes pueden hacer que algoritmos sencillos como k medias funcionen de manera
+decente generando grupos que sean convenientes para la necesidad del momento.
+
+* El proyecto cumple con todos los objetivos planteados, dado que se logra predecir
+y anticipar la cantidad y tipo de accidentes, se hace un agrupamiento de los barrios
+donde se definen las zonas con mayor y menor riesgo de accidentalidad, y finalmente
+toda la información queda consolidada en una página web con el código e informe 
+técnico debidamente hechos.
 
 
