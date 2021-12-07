@@ -86,10 +86,24 @@ div.caption {
 }
 
 .frow {
-  display: table;
-  width: 100%
+  display: flex;
 }
 
 .fcol {
-  display: table-cell;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+}
+
+.fimgs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.video {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

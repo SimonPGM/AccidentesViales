@@ -3,9 +3,18 @@ library(tidyverse)
 library(leaflet)
 library(plotly)
 Ui <- navbarPage(
-  "Análisis de accidentalidad en Medellín",
+  "Choquentérese",
+  tags$head(tags$link(rel = "icon", href = "logo.png")),
   includeCSS("./www/styles.css"),
-  tabPanel("Introducción"),
+  tabPanel("Introducción",
+           fluidPage(fluidRow(
+             column(12,
+                    includeHTML("./www/header.html"))
+           ),
+           fluidRow(
+             column(12,
+                    includeHTML("./www/Intro.html"))
+           ))),
   tabPanel("Visualización de datos",
            fluidPage(
              fluidRow(column(12,

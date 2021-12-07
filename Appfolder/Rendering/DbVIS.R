@@ -6,7 +6,9 @@ lista.iconos <- iconList("Con muertos" = makeIcon(iconUrl = "./www/risk-skull.pn
                                                   iconWidth = 24, iconHeight = 24),
                          "Solo danos" = makeIcon(iconUrl = "./www/car-crash.png",
                                                  iconWidth = 48, iconHeight = 48))
-
+html.legend <- "<img src='risk-skull.png'>Con muertos<br/>
+<img src='bandage.png'>Con heridos<br/>
+<img src='car-crash.png'>Solo daños"
 
 generate.db <- function(date.lower, date.upper,
                          acctype = "Sin filtro", accgrav = "Sin filtro", db = datos) {
@@ -42,6 +44,7 @@ generate.db.map <- function(date.lower, date.upper,
   m <- leaflet() %>%
         addTiles() %>%  # Add default OpenStreetMap map tiles
         addMarkers(lng=temp$lng, lat=temp$lat, clusterOptions = markerClusterOptions(),
-                   icon = lista.iconos[temp$GRAVEDAD_ACCIDENTE]) 
+                   icon = lista.iconos[temp$GRAVEDAD_ACCIDENTE]) %>%
+    addControl(html = html.legend, position = "bottomright")
   return(m)
 }
