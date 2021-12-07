@@ -191,38 +191,7 @@ Ui <- navbarPage(
                fluidRow(
                  column(
                    2,
-                   dateInput(
-                     "dateinputstartPTh",
-                     "Seleccione la fecha de inicio para la visualización",
-                     value = "2020-01-01",
-                     min = "2020-01-01",
-                     max = "2021-12-31",
-                     format = "dd-mm-yyyy",
-                     language = "es"
-                   ),
-                   dateInput(
-                     "dateinputendPTh",
-                     "Seleccione la fecha de fin para la visualización",
-                     value = "2021-12-31",
-                     min = "2020-01-01",
-                     max = "2021-12-31",
-                     format = "dd-mm-yyyy",
-                     language = "es"
-                   ),
-                   selectInput(
-                     "acctypePTh",
-                     "Elija el tipo de accidente para filtrar",
-                     c(
-                       "Sin filtro",
-                       "Atropello",
-                       "Caída de ocupante",
-                       "Choque",
-                       "Volcamiento",
-                       "Incendio",
-                       "Otro"
-                     ),
-                     selected = "Sin filtro"
-                   )
+                   includeHTML("./www/tts.html")
                  ),
                  column(10,
                         plotlyOutput('plotPTh'))
