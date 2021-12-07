@@ -28,9 +28,29 @@ for (i in 1:ncol(idx)) {
   lista.clusters[[i]] <- kmeans(datos[, idx[, i]], centers = 3, nstart = 25)
 }
 
-fviz_cluster(lista.clusters[[1]], data = datos[,idx[,1]])
-fviz_cluster(lista.clusters[[2]], data = datos[,idx[,2]])
-fviz_cluster(lista.clusters[[3]], data = datos[,idx[,3]])
+fviz_cluster(lista.clusters[[1]], data = datos[,idx[,1]]) +
+  labs(x = "Tasa graves", y = "Mayor probabilidad",
+       title = "Clustering 1") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = .5),
+        axis.text = element_blank()) %>%
+  saveRDS("Cluster1.Rds")
+
+p <- fviz_cluster(lista.clusters[[2]], data = datos[,idx[,2]]) +
+  labs(x = "Tasa graves", y = "Choques en [0,1]",
+       title = "Clustering 2") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = .5),
+        axis.text = element_blank())
+saveRDS(p, "Cluster2.Rds")
+
+fviz_cluster(lista.clusters[[3]], data = datos[,idx[,3]]) +
+  labs(x = "Mayor probabilidad", y = "Choques en [0,1]",
+       title = "Clustering 3") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = .5),
+        axis.text = element_blank()) %>%
+  saveRDS("Cluster3.Rds")
 
 datos %<>%
   mutate(clusterthree = lista.clusters[[3]]$cluster)
@@ -46,7 +66,7 @@ datos <- readRDS("Datosclustersfinal.Rds")
 datos %>%
   arrange(desc(ACCIDENTES_DIARIOS)) %>%
   select(BARRIO, ACCIDENTES_DIARIOS, clustertwo) %>%
-  View()
+  View
 
 #Exportando los datos
 datos %>%
