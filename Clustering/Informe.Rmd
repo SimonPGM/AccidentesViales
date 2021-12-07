@@ -1,0 +1,59 @@
+---
+title: "Informe clustering"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, fig.align = "center")
+library(tidyverse)
+```
+
+# Clustering
+
+Para realizar el agrupamiento surgió la idea de manera natural de considerar tres
+grupos, los cuales representarían las zonas con menor riesgo, con riesgo medio y 
+con riesgo alto de accidentarse.
+
+Dicho esto, se contó la cantidad total de accidentes por barrio en el periodo de tiempo
+existente en los datos y con base en esto se crearon algunas métricas. La primera de
+ellas indica la proporción de accidentes graves, donde se consideró como de esta
+categoría aquellos choques en los cuales hubo defunciones. Asimismo, se construyó
+un indicador de la la probabilidad de ocurrencia de las clases de acciedentes más comunes,
+es decir, choque o atropello. Finalmente, se crea una última variable que consiste en
+la cantidad de accidentes llevados a una escala unitaria, ya que como los otros
+indicadores son proporciones, esto asegura que este también se encuentre en la misma 
+escala, pues esto es preferible al aplicar el algoritmo de k medias.
+
+Dicho esto, se consideraron, inicialmente, todas las combinaciones posibles de a dos,
+de las métricas mencionadas anteriormente, obteniendo que las variables tasa de graves y
+los choques en el intervalo unitario generan tres grupos que son razonables y 
+hacen sentido.
+
+```{r clustersone, fig.cap="Grupos definitivos clustering"}
+readRDS("Cluster2.Rds")
+```
+
+Finalmente se presentan las distribuciones de la accidentalidad por cluster.
+
+```{r clusterstwo}
+datos <- readRDS("BarrioCluster.Rds")
+datos %>%
+  group_by(Cluster) %>%
+  summarise(media = mean(ACCIDENTES_DIARIOS), desvi = sd(ACCIDENTES_DIARIOS),
+            lower = quantile(ACCIDENTES_DIARIOS, c(0.025)),
+            upper = quantile(ACCIDENTES_DIARIOS, c(0.975)),
+            med = median(ACCIDENTES_DIARIOS)) %>%
+  select(-desvi) %>%
+  ggplot(aes(x = Cluster, y = media, ymin = upper, ymax = lower)) +
+  geom_errorbar() +
+  geom_point(col = "red")+
+  labs(x = "Riesgo de accidentalidad", y = "Número medio de accidentes por barrio",
+       title = "Comparación entre los diferentes grupos") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = .5))
+```
+
+Como se puede observar en el gráfico anterior, no hay traslapes entre las regiones de
+confianza definidas por grupo, lo cual es un indicio de que existen diferencias 
+significativas entre la cantidad de accidentes medios por grupo, mostrando así lo
+adecuados que resultó el agrupamiento.
