@@ -133,7 +133,7 @@ los meses que se pueden etiquetar como lluviosos o secos.
 <!-- [3]: https://github.com/nequibc/colombia-holidays -->
 
 Se buscó la manera de llevar la información de días festivos a la base de datos.
-Gracias a un repositorio de GitHub de Nequi se encontró un modulo node.js el 
+Gracias a un repositorio de GitHub de Nequi [3] se encontró un modulo node.js el 
 cual a través de JavaScript se pudo exportar a un objeto JSON, luego se usó la
 función `fromJSON()` de la librería `rjson` para poder trabajar con JavaScript 
 Objects Notation (JSON) en R y así extraer los datos de los días festivos en 
@@ -393,4 +393,16 @@ donde se definen las zonas con mayor y menor riesgo de accidentalidad, y finalme
 toda la información queda consolidada en una página web con el código e informe 
 técnico debidamente hechos.
 
+# Referencias
+
+[1] (2021, Jun 12). LA ALTA ACCIDENTALIDAD EN MEDELLÍN SE CONVIRTIÓ EN UN 
+PROBLEMA DE SALUD PÚBLICA. Concejo de Medellín (Boletín 070) [Online]. Disponible:
+https://www.concejodemedellin.gov.co/es/node/1024?language_content_entity=es
+
+[2] El clima y el tiempo promedio en todo el año en Medellín. Weather Spark [Online].
+Disponible: 
+https://es.weatherspark.com/y/22535/Clima-promedio-en-Medell%C3%ADn-Colombia-durante-todo-el-a%C3%B1o
+
+[3] (2017, May 16). Colombia Holidays. Nequi [Online]. Disponible:
+https://github.com/nequibc/colombia-holidays
 
