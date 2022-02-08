@@ -1,0 +1,120 @@
+.navbar-default {
+    background-color: #03fcb1;
+    border-color: #e7e7e7;
+}
+
+.navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:focus, .navbar-default .navbar-nav>.active>a:hover {
+    color: #555;
+    background-color: #5698a6;
+}
+
+.row {
+    display: flex;
+  }
+  
+.column {
+    flex: 33.33%;
+    padding: 5px;
+    text-align: center;
+    position: relative;
+  }
+
+.gitphoto {
+    border-radius: 50%;
+    width: 70%;
+    opacity: 1;
+    display: block;
+    height: auto;
+    transition: .5s ease;
+    backface-visibility: hidden;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.Header {
+  min-height: 130px;
+  padding: 10px;
+  padding-bottom: 10px;
+  border-radius: 20px 20px 20px 20px;
+     /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#feffff+0,d2ebf9+100;Blue+3D+%2312 */
+background: #feffff; /* Old browsers */
+background: -moz-linear-gradient(top,  #feffff 0%, #d2ebf9 100%); /* FF3.6-15 */
+background: -webkit-linear-gradient(top,  #feffff 0%,#d2ebf9 100%); /* Chrome10-25,Safari5.1-6 */
+background: linear-gradient(to bottom,  #feffff 0%,#d2ebf9 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#feffff', endColorstr='#d2ebf9',GradientType=0 ); /* IE6-9 */
+
+}
+
+.logopic {
+  display: block;
+  margin: auto;
+  width: 280px;
+  float:initial;
+}
+
+div.caption {
+  text-align: center;
+  padding: 10px;
+  font-size: 300%;
+ }
+ 
+.container-fluid {
+    padding-right: 5px;
+    padding-left: 5px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.column:hover .gitphoto {
+  opacity: 0.3;
+}
+
+.oculto {
+  position: absolute;
+  top: 30%;
+  left: 25%;
+  right: 25%;
+  bottom: 25%;
+  font-weight: bold;
+  visibility: hidden;
+  -webkit-transition: visibility 0s, opacity 0.5s linear;
+  transition: visibility 0s, opacity 0.5s linear;
+}
+
+.column:hover .oculto {
+  visibility: visible;
+}
+
+.frow {
+  display: flex;
+}
+
+.fcol {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+}
+
+.fimgs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.video {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ttside {
+  display: flex;
+  flex-direction: column;
+}
+
+.imgtt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
