@@ -24,7 +24,7 @@ Ui <- navbarPage(
     )
   ),
   tabPanel(
-    "Visualización de datos",
+    "Mapa de accidentalidad en Medellín",
     fluidPage(
       fluidRow(column(
         12,
@@ -35,6 +35,9 @@ Ui <- navbarPage(
       fluidRow(
         column(
           2,
+          includeHTML(
+            "./www/mapvis.html"
+          ),
           dateInput(
             "dateinputstartVis",
             "Seleccione la fecha de inicio para la visualización",
@@ -85,9 +88,9 @@ Ui <- navbarPage(
     )
   ),
   navbarMenu(
-    "Modelo predictivo",
+    "Predicción de la cantidad de accidentes",
     tabPanel(
-      "Periodo 2014-2018",
+      "Periodo 2014-2017",
       fluidPage(
         fluidRow(column(
           12,
@@ -98,6 +101,9 @@ Ui <- navbarPage(
         fluidRow(
           column(
             2,
+            includeHTML(
+              "./www/plotvis1.html"
+            ),
             dateInput(
               "dateinputstartPO",
               "Seleccione la fecha de inicio para la visualización",
@@ -155,6 +161,9 @@ Ui <- navbarPage(
         fluidRow(
           column(
             2,
+            includeHTML(
+              "./www/plotvis2.html"
+            ),
             dateInput(
               "dateinputstartPT",
               "Seleccione la fecha de inicio para la visualización",
@@ -201,7 +210,7 @@ Ui <- navbarPage(
       )
     ),
     tabPanel(
-      "Periodo 2020-2021",
+      "Periodo 2020",
       fluidPage(
         fluidRow(column(
           12,
@@ -223,7 +232,7 @@ Ui <- navbarPage(
     )
   ),
   tabPanel(
-    "Clasificación de los barrios",
+    "¿Cuál es el riesgo de accidentarse en los barrios de Medellín?",
     fluidPage(
       fluidRow(column(
         12,
@@ -246,7 +255,7 @@ Ui <- navbarPage(
     )
   ),
   tabPanel(
-    "Información adicional",
+    "Acerca de nosotros",
     includeHTML("./www/Info.html")
   )
 )
