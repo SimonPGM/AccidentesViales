@@ -5,14 +5,6 @@ library(tidyverse)
 library(leaflet)
 library(plotly)
 SERVER <- function(input, output) {
-  output$dataVis <- renderDataTable({
-    generate.db(
-      input$dateinputstartVis,
-      input$dateinputendVis,
-      input$acctypeVis,
-      input$gravtypeVis
-    )
-  }, options = list(pageLength = 10, lengthChange = F))
   output$mapVis <- renderLeaflet({
     generate.db.map(
       input$dateinputstartVis,
