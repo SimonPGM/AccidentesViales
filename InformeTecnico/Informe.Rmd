@@ -1,8 +1,16 @@
 ---
 title: "Informe técnico"
+author: 
+  - "Juan José Galeano Arenas"
+  - "Simón Pedro Galeano Muñoz"
+  - "Sebastian Gaviria Sanchez"
+  - "Verónica Ríos Vargas"
+lang: "es"
 output: 
-  html_document:
+  bookdown::html_document2:
+    number_sections: false
     toc: true
+    toc_float: true
     theme: united
 ---
 
@@ -159,7 +167,7 @@ ser utiles en la construcción de modelos
 
 ## Distribución del número de accidentes diarios
 
-```{r}
+```{r, fig.cap="Distribución del número de accidentes diarios por temporada climática"}
 #Breaks con la regla de Sturges3
 MySturges <- function(x){
   pretty(range(x),
@@ -170,63 +178,59 @@ ggplot(basemodelo, aes(x = ACCIDENTES_DIARIOS)) +
   geom_histogram(breaks = MySturges(basemodelo$ACCIDENTES_DIARIOS),
                  col = "black", fill = "cyan") +
   facet_wrap(~PRECIP_MES) +
-  labs(y = "Frecuencia",  x = "Accidentes diarios",
-       title = "Distribución del número de accidentes diarios por temporada climática") +
+  labs(y = "Frecuencia",  x = "Accidentes diarios") +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
 Observe la gran similaridad entre la distribución del número de accidentes diarios en las temporadas secas y lluviosas lo cual sugiere que está variable no tiene efecto en el número de accidentes diarios.
 
-```{r}
+```{r, fig.cap="Distribución de accidentes diarios por días de la semana"}
 ggplot(basemodelo, aes(x = ACCIDENTES_DIARIOS)) +
   geom_histogram(breaks = MySturges(basemodelo$ACCIDENTES_DIARIOS),
                  col = "black", fill = "lightgreen") +
   facet_wrap(~DIA_ACCIDENTE) +
-  labs(y = "Frecuencia",  x = "Accidentes diarios",
-       title = "Distribución de accidentes diarios por días de la semana") +
+  labs(y = "Frecuencia",  x = "Accidentes diarios") +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
 Note que, en promedio, el número de accidentes diarios en los diferetes días de la semana es muy similar, sin embargo, existen ligeras diferencias en las distribuciones del número de accidentes.
 
-```{r}
+```{r, fig.cap="Distribución de accidentes diarios los días festivos"}
 ggplot(basemodelo, aes(x = ACCIDENTES_DIARIOS)) +
   geom_histogram(breaks = MySturges(basemodelo$ACCIDENTES_DIARIOS),
                  col = "black", fill = "blue", 
                  mapping = aes(y = ..density..)) +
   facet_wrap(~FESTIVO) +
-  labs(y = "Frecuencia",  x = "Accidentes diarios",
-       title = "Distribución de accidentes diarios por días de la semana") +
+  labs(y = "Frecuencia",  x = "Accidentes diarios") +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
 Se usa un histograma relativo debido a la gran diferencia en el número días festivos respecto a los no festivos, aquí se puede apreciar que la distribución del número de accidentes diarios difieren entre los días puesto que para los días no festivos existe asimetría negativa mientras que para los festivos hay un ligero sesgo a derecha.
 
-```{r}
+```{r, fig.cap="Distribución de los accidentes por clase"}
 raw_clean <- read.csv("../Limpieza_Datos/Limpia.csv", sep = ";")
 raw_clean %>% 
   group_by(CLASE_ACCIDENTE) %>%
   summarise(Accidentes = n()) %>%
   ggplot(aes(x = CLASE_ACCIDENTE, y = Accidentes)) +
   geom_col(col = "black", fill = "gold") +
-  labs(title = "Distribución de los accidentes por clase",
-       x = "Clase de accidente", y = "Cantidad de accidentes") +
+  labs(x = "Clase de accidente", y = "Cantidad de accidentes") +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
 Se aprecia que el número de accidentes por clase de accidente es diferente por lo que no es descabellado repartir el número de accidentes de forma proporcional a la clase.
 
-```{r}
+```{r, fig.cap="Distribución de los accidentes por clase a lo largo de los años"}
 ggplot(raw_clean, aes(x = CLASE_ACCIDENTE, fill = CLASE_ACCIDENTE)) +
   geom_bar() +
   facet_wrap(~ANO) +
   theme_bw() +
-  labs(y = "Frecuencia", x = "Clase de accidente", fill = "Clase de accidente",
-       title = "Distribución de los accidentes por clase a lo largo de los años") +
+  labs(y = "Frecuencia", x = "Clase de accidente", 
+       fill = "Clase de accidente") +
   theme(plot.title = element_text(hjust = 0.5), 
         axis.text.x = element_blank())
 ```
@@ -280,8 +284,9 @@ modelo final para este propósito es el siguiente:
 $$
 \hat{y} = \hat{\beta_0} + \hat{\beta_1} \text{(Día de accidente)} + \hat{\beta_2} \text{(Festivo)} 
 $$
+dado que las covariables usadas son categóricas con 7 y 2 niveles respectivamente, la ecuación se termina descomponiendo en 7 variables dummies además del intercepto, 6 para el día del accidente y 1 para el festivo.
 
-Con esto, se obtuvo un modelo con capacidad predictiva a nivel diario para el
+Con lo anterior, se obtuvo un modelo con capacidad predictiva a nivel diario para el
 número de accidentes en la ciudad de Medellín. Para lograr predicciones a nivel
 semanal y mensual surgió la idea natural de sumar los días a nivel semanal y
 mensual, y después de evaluar métricas de desempeño en estas dimensiones, se
@@ -344,13 +349,13 @@ de las métricas mencionadas anteriormente, obteniendo que las variables tasa de
 y los choques en el intervalo unitario generan tres grupos que son razonables y 
 hacen sentido.
 
-```{r clustersone}
+```{r clustersone, fig.cap="Agrupamiento por tasa de accidentes graves y choques"}
 readRDS("Cluster2.Rds")
 ```
 
 Finalmente se presentan las distribuciones de la accidentalidad por cluster.
 
-```{r clusterstwo}
+```{r clusterstwo, fig.cap="Comparación entre los diferentes grupos"}
 datos <- readRDS("BarrioCluster.Rds")
 datos %>%
   group_by(Cluster) %>%
@@ -362,8 +367,8 @@ datos %>%
   ggplot(aes(x = Cluster, y = media, ymin = upper, ymax = lower)) +
   geom_errorbar() +
   geom_point(col = "red")+
-  labs(x = "Riesgo de accidentalidad", y = "Número medio de accidentes por barrio",
-       title = "Comparación entre los diferentes grupos") +
+  labs(x = "Riesgo de accidentalidad",
+       y = "Número medio de accidentes por barrio") +
   theme_bw() +
   theme(plot.title = element_text(hjust = .5))
 ```
